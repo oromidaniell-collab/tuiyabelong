@@ -156,16 +156,11 @@ async function handleLogin(event) {
                 window.location.href = 'index.html';
             }
         } else {
-            try {
-                const errorData = await response.json();
-                alert('Login failed: ' + (errorData.detail || 'Invalid credentials'));
-            } catch (e) {
-                alert('Login failed: ' + response.status);
-            }
+            alert('Login failed. Please check your credentials and try again.');
         }
     } catch (err) {
         console.error('Login error:', err);
-        alert(`Login Error: ${err.message}`);
+        alert('Login failed. Please check your connection and try again.');
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;

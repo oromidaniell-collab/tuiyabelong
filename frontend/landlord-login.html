@@ -166,7 +166,26 @@
             document.getElementById('landlord-access-key').focus();
         }
 
+        // Premium Particles
+        function initAuthParticles() {
+            const container = document.querySelector('.auth-particles');
+            if (!container) return;
+            container.innerHTML = '';
+            for (let i = 0; i < 20; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const size = Math.random() * 5 + 2;
+                p.style.width = `${size}px`;
+                p.style.height = `${size}px`;
+                p.style.left = `${Math.random() * 100}%`;
+                p.style.animationDuration = `${Math.random() * 10 + 10}s`;
+                p.style.animationDelay = `${Math.random() * 5}s`;
+                container.appendChild(p);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            initAuthParticles();
             document.getElementById('landlord-access-key').addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') verifyLandlordKey();
             });

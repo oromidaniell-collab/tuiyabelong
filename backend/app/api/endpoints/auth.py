@@ -62,6 +62,7 @@ class UserCreate(BaseModel):
     phone: str
     password: str
     first_name: str
+    last_name: str = ""
     role: UserRole = UserRole.TENANT
     terms_accepted: bool
     room_number: Optional[str] = None
