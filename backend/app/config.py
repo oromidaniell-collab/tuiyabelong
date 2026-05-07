@@ -39,6 +39,11 @@ class Settings(BaseSettings):
         
         # Clean up any potential double protocols or whitespace
         url = url.strip()
+        
+        # Force disable prepared statements for PgBouncer compatibility
+        if "prepared_statement_cache_size" not in url:
+            separator = "&" if "?" in url else "?"
+            url = f"{url}{separator}prepared_statement_cache_size=0"
             
         return url
 

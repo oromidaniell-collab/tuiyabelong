@@ -12,9 +12,10 @@ logger = logging.getLogger(__name__)
 if not settings.ASYNC_DATABASE_URL:
     raise ValueError("DATABASE_URL must be set in Environment Variables")
 
-# On Vercel (Serverless), we should use NullPool to prevent connection leaks/errors
+# On Vercel (Serverless) or when using Supabase Pooler, we MUST use NullPool
 import os
-pool_class = NullPool if os.getenv("VERCEL") else None
+is_pooler = "pooler.supabase.com" in settings.ASYNC_DATABASE_URL
+pool_class = NullPool if (os.getenv("VERCEL") or is_pooler) else None
 
 # Configure engine arguments dynamically based on pool class
 engine_kwargs = {
