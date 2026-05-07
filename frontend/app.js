@@ -4,6 +4,28 @@ let currentUser = null;
 let allNotifications = [];
 let currentFilter = 'all';
 
+// Global notification handler
+function showStatus(message, type = 'error', elementId = 'status-message') {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    
+    el.textContent = message;
+    el.className = `status-message ${type}`;
+    el.style.display = 'block';
+    
+    // Auto-scroll to message if on mobile
+    if (window.innerWidth < 768) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Auto-hide after 10 seconds if it's success
+    if (type === 'success') {
+        setTimeout(() => {
+            el.style.display = 'none';
+        }, 10000);
+    }
+}
+
 // Theme Management
 function initTheme() {
     const savedTheme = localStorage.getItem('rms-theme') || 'light';
@@ -156,11 +178,11 @@ async function handleLogin(event) {
                 window.location.href = 'index.html';
             }
         } else {
-            alert('Login failed. Please check your credentials and try again.');
+            showStatus('Login failed. Please check your credentials and try again.', 'error', 'login-status');
         }
     } catch (err) {
         console.error('Login error:', err);
-        alert('Login failed. Please check your connection and try again.');
+        showStatus('Connection error. Please check your internet and try again.', 'error', 'login-status');
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
@@ -240,30 +262,26 @@ async function handleRegistration(event) {
 
         if (response.ok) {
             const data = await response.json();
-            // Show success panel instead of just an alert
             const formPanel = document.getElementById('form-panel');
             const successPanel = document.getElementById('success-panel');
             if (formPanel && successPanel) {
                 formPanel.style.display = 'none';
                 successPanel.style.display = 'block';
             } else {
-                alert('Registration successful! Please log in.');
-                window.location.href = 'index.html';
+                showStatus('Registration successful! Please log in.', 'success');
+                setTimeout(() => { window.location.href = 'index.html'; }, 2000);
             }
         } else {
-            let errorMsg = `Server Error (${response.status})`;
+            let userMsg = 'Registration failed. Please check your details and try again.';
             try {
                 const errorData = await response.json();
-                errorMsg = errorData.detail || errorMsg;
-            } catch (jsonErr) {
-                const text = await response.text();
-                errorMsg = text.substring(0, 100) || errorMsg;
-            }
-            alert('Registration failed: ' + errorMsg);
+                if (errorData.detail) userMsg = errorData.detail;
+            } catch (e) {}
+            showStatus(userMsg, 'error');
         }
     } catch (err) {
         console.error('Registration error:', err);
-        alert(`Registration Error: ${err.message}`);
+        showStatus('Connection error. Please check your internet and try again.', 'error');
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
