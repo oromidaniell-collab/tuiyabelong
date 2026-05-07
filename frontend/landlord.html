@@ -131,33 +131,33 @@
                     <!-- ═══ UTILITIES VIEW ═══ -->
                     <div id="utilities" class="content-view">
                         
-                        <!-- Profit Summary Cards -->
+                        <!-- Spending Summary Cards -->
                         <div class="stats-grid" id="utility-profit-stats">
                             <div class="stat-card">
                                 <div class="stat-icon" style="background:#e0f2fe;"><i class="fas fa-tint" style="color:#0284c7;"></i></div>
                                 <div class="stat-info">
-                                    <span class="stat-label">Water Income</span>
-                                    <h3 id="water-income">Ksh 0</h3>
+                                    <span class="stat-label">Water Expenses</span>
+                                    <h3 id="water-expense">Ksh 0</h3>
                                 </div>
                             </div>
                             <div class="stat-card">
                                 <div class="stat-icon" style="background:#f0fdf4;"><i class="fas fa-wifi" style="color:#16a34a;"></i></div>
                                 <div class="stat-info">
-                                    <span class="stat-label">Wifi Income</span>
-                                    <h3 id="wifi-income">Ksh 0</h3>
+                                    <span class="stat-label">Wifi Expenses</span>
+                                    <h3 id="wifi-expense">Ksh 0</h3>
                                 </div>
                             </div>
                             <div class="stat-card">
                                 <div class="stat-icon" style="background:#fefce8;"><i class="fas fa-coins" style="color:#ca8a04;"></i></div>
                                 <div class="stat-info">
-                                    <span class="stat-label">Total Utility Income</span>
-                                    <h3 id="total-utility-income">Ksh 0</h3>
+                                    <span class="stat-label">Total Spending</span>
+                                    <h3 id="total-utility-expense">Ksh 0</h3>
                                 </div>
                             </div>
                             <div class="stat-card">
                                 <div class="stat-icon" style="background:#fef2f2;"><i class="fas fa-clock" style="color:#dc2626;"></i></div>
                                 <div class="stat-info">
-                                    <span class="stat-label">Pending Charges</span>
+                                    <span class="stat-label">Unpaid Bills</span>
                                     <h3 id="pending-utility-count">0</h3>
                                 </div>
                             </div>
@@ -169,7 +169,7 @@
                             <div class="card utility-form-card">
                                 <div class="utility-form-header">
                                     <i class="fas fa-tint" style="color:#0284c7;"></i>
-                                    <h3>Add Water Charge</h3>
+                                    <h3>Add Water Bill</h3>
                                 </div>
                                 <form id="water-charge-form" onsubmit="submitUtilityCharge(event, 'water')">
 
@@ -191,7 +191,7 @@
                                         <label for="water-notes">Notes (optional)</label>
                                         <input type="text" id="water-notes" placeholder="Any notes...">
                                     </div>
-                                    <button type="submit" class="btn-primary btn-block"><i class="fas fa-plus"></i> Add Water Charge</button>
+                                    <button type="submit" class="btn-primary btn-block"><i class="fas fa-plus"></i> Add Water Bill</button>
                                 </form>
                             </div>
 
@@ -199,7 +199,7 @@
                             <div class="card utility-form-card">
                                 <div class="utility-form-header">
                                     <i class="fas fa-wifi" style="color:#16a34a;"></i>
-                                    <h3>Add Wifi Charge</h3>
+                                    <h3>Add Wifi Bill</h3>
                                 </div>
                                 <form id="wifi-charge-form" onsubmit="submitUtilityCharge(event, 'wifi')">
 
@@ -215,7 +215,7 @@
                                         <label for="wifi-notes">Notes (optional)</label>
                                         <input type="text" id="wifi-notes" placeholder="Any notes...">
                                     </div>
-                                    <button type="submit" class="btn-primary btn-block" style="background:#16a34a;"><i class="fas fa-plus"></i> Add Wifi Charge</button>
+                                    <button type="submit" class="btn-primary btn-block" style="background:#16a34a;"><i class="fas fa-plus"></i> Add Wifi Bill</button>
                                 </form>
                             </div>
                         </div>
@@ -223,7 +223,7 @@
                         <!-- Charges History -->
                         <div class="card">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.75rem;">
-                                <h3 style="margin:0;">Utility Charges History</h3>
+                                <h3 style="margin:0;">Utility Bill History</h3>
                                 <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                                     <select id="filter-utility-type" onchange="loadUtilityCharges()" style="padding:0.4rem 0.6rem; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.8rem; background:var(--bg-main); color:var(--text-main);">
                                         <option value="">All Types</option>

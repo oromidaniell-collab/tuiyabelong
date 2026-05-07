@@ -140,7 +140,10 @@ async def get_dashboard_metrics(
     """Get key dashboard metrics"""
     
     # Count total tenants (using User table to ensure new unassigned tenants are counted)
-    result = await db.execute(select(func.count(User.id)).where(User.role == UserRole.TENANT))
+    # We use a subquery or join-less count for speed, but ensure it filters by role
+    result = await db.execute(
+        select(func.count(User.id)).where(User.role == UserRole.TENANT)
+    )
     total_tenants = result.scalar() or 0
     
     # Count total properties
@@ -468,3 +471,35 @@ async def get_system_info(
         "server_time": datetime.utcnow().isoformat(),
         "timezone": "Africa/Nairobi"
     }
+
+@router.delete("/tenants/{user_id}", status_code=status.HTTP_200_OK)
+async def delete_tenant(
+    user_id: int,
+    current_user: User = Depends(get_current_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Admin/Owner only: Delete a tenant account and associated records"""
+    
+    # 1. Find the user
+    result = await db.execute(select(User).where(User.id == user_id))
+    target_user = result.scalar_one_or_none()
+    
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    if target_user.role != UserRole.TENANT:
+        raise HTTPException(status_code=400, detail="Only tenant accounts can be deleted from here")
+
+    # 2. Delete Tenant record first (if exists)
+    await db.execute(
+        f"DELETE FROM tenants WHERE user_id = {user_id}"
+    ) # Using raw or select then delete for speed here, but SQLAlchemy delete is safer
+    
+    from sqlalchemy import delete
+    await db.execute(delete(Tenant).where(Tenant.user_id == user_id))
+    
+    # 3. Delete the User
+    await db.execute(delete(User).where(User.id == user_id))
+    
+    await db.commit()
+    return {"message": "Tenant account and associated records deleted successfully"}

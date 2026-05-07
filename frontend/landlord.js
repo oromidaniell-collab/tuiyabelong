@@ -112,14 +112,42 @@ async function loadTenants() {
                 <td>Ksh ${(tenant.monthly_rent || 0).toLocaleString()}</td>
                 <td><span class="status-badge status-${tenant.status}">${tenant.status}</span></td>
                 <td>
-                    <button onclick="viewTenantDetails(${tenant.id})" class="icon-btn"><i class="fas fa-eye"></i></button>
-                    <button onclick="sendMessageToTenant(${tenant.id})" class="icon-btn"><i class="fas fa-envelope"></i></button>
+                    <button onclick="viewTenantDetails(${tenant.id})" class="icon-btn" title="View Details"><i class="fas fa-eye"></i></button>
+                    <button onclick="sendMessageToTenant(${tenant.id})" class="icon-btn" title="Send Message"><i class="fas fa-envelope"></i></button>
+                    <button onclick="deleteTenantAccount(${tenant.id}, '${escapeHtml(tenant.name)}')" class="icon-btn text-danger" title="Delete Account"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>
         `).join('');
     } catch (err) {
         console.error('Error loading tenants:', err);
         tbody.innerHTML = '<tr><td colspan="6" class="text-center">Error loading tenants.</td></tr>';
+    }
+}
+
+async function deleteTenantAccount(userId, name) {
+    if (!confirm(`Are you absolutely sure you want to delete the account for ${name}?\n\nThis will permanently remove their access and tenant records.`)) {
+        return;
+    }
+
+    const token = localStorage.getItem('rms-landlord-token');
+    try {
+        const res = await fetch(`/api/v1/admin/tenants/${userId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            alert('Tenant account deleted successfully.');
+            // Refresh both the list and the dashboard metrics
+            loadTenants();
+            loadDashboardMetrics();
+        } else {
+            const data = await res.json();
+            alert('Failed to delete account: ' + (data.detail || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error('Delete error:', err);
+        alert('Error connecting to server. Please try again.');
     }
 }
 
@@ -453,9 +481,9 @@ async function loadUtilityProfitSummary() {
         });
         const data = await res.json();
         
-        document.getElementById('water-income').textContent = `Ksh ${(data.total_water_income || 0).toLocaleString()}`;
-        document.getElementById('wifi-income').textContent = `Ksh ${(data.total_wifi_income || 0).toLocaleString()}`;
-        document.getElementById('total-utility-income').textContent = `Ksh ${(data.total_utility_income || 0).toLocaleString()}`;
+        document.getElementById('water-expense').textContent = `Ksh ${(data.total_water_expense || 0).toLocaleString()}`;
+        document.getElementById('wifi-expense').textContent = `Ksh ${(data.total_wifi_expense || 0).toLocaleString()}`;
+        document.getElementById('total-utility-expense').textContent = `Ksh ${(data.total_utility_expense || 0).toLocaleString()}`;
         document.getElementById('pending-utility-count').textContent = data.pending_count || 0;
     } catch (err) {
         console.error('Error loading utility profit summary:', err);
