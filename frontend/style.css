@@ -15,6 +15,7 @@
     --bg-main:      #f5f7fa;
     --bg-sidebar:   #ffffff;
     --bg-card:      #ffffff;
+    --auth-bg:      #e8eaed;  /* Grey background for login */
 
     --text-main:    #0f172a;
     --text-muted:   #64748b;
@@ -80,7 +81,7 @@ body {
     padding: 0;
     margin: 0;
     z-index: 9999;
-    background: var(--bg-main);
+    background: var(--auth-bg);
     overflow: hidden;
 
 /* --- Glassmorphic card --- */
@@ -144,11 +145,27 @@ body {
     margin-top: 0.3rem;
 }
 
-/* --- Word rotator - static display --- */
+/* --- Word rotator - display all words in sequence --- */
 .auth-word-rotator {
-    display: inline;
+    display: inline-block;
+    min-width: 80px;
     color: var(--accent);
     font-weight: 600;
+}
+
+.auth-word-rotator .word {
+    display: none;
+}
+
+.auth-word-rotator .word.active {
+    display: inline;
+    animation: wordFade 3s ease-in-out;
+}
+
+@keyframes wordFade {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+}
 
 /* --- Form (dark-adapted) --- */
 .auth-form {

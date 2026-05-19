@@ -190,9 +190,31 @@ async function handleLogin(event) {
 }
 
 
+// Initialize word rotator on login page
+function initWordRotator() {
+    const rotator = document.querySelector('.auth-word-rotator');
+    if (!rotator) return;
+    
+    const words = rotator.querySelectorAll('.word');
+    if (words.length === 0) return;
+    
+    let currentIndex = 0;
+    
+    // Show first word
+    words[0].classList.add('active');
+    
+    // Rotate words every 3 seconds
+    setInterval(() => {
+        words[currentIndex].classList.remove('active');
+        currentIndex = (currentIndex + 1) % words.length;
+        words[currentIndex].classList.add('active');
+    }, 3000);
+}
+
 // Initialize theme
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
+    initWordRotator();
     checkAuth();
 });
 
