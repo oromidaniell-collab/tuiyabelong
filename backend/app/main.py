@@ -1,6 +1,6 @@
 # backend/app/main.py
 # backend/app/main.py initialization
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
@@ -214,8 +214,26 @@ async def serve_landlord_login():
     raise HTTPException(status_code=404, detail="Landlord login page not found")
 
 @app.get("/{full_path:path}")
-async def serve_frontend(full_path: str):
-    """Serve frontend files"""
+async def serve_frontend(request: Request, full_path: str):
+    """Serve frontend files with portal-aware routing"""
+    
+    # Get the detected portal from middleware
+    portal = getattr(request.state, 'portal', 'tenant')
+    
+    # For root path, serve appropriate login/dashboard based on portal
+    if full_path == '' or full_path == '/':
+        if portal == 'admin':
+            file_path = os.path.join(FRONTEND_DIR, "admin-login.html")
+        elif portal == 'landlord':
+            file_path = os.path.join(FRONTEND_DIR, "landlord-login.html")
+        else:
+            file_path = os.path.join(FRONTEND_DIR, "index.html")
+        
+        if os.path.exists(file_path):
+            logger.info(f"Serving {portal} portal: {file_path}")
+            return FileResponse(file_path)
+    
+    # Try to serve requested file
     file_path = os.path.join(FRONTEND_DIR, full_path)
     
     # If it's a file that exists, serve it
@@ -231,4 +249,16 @@ async def serve_frontend(full_path: str):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    
+    # Determine which port based on deployment environment
+    port = settings.TENANT_PORT  # Default
+    if settings.DEPLOYMENT_ENV == "landlord":
+        port = settings.LANDLORD_PORT
+    elif settings.DEPLOYMENT_ENV == "admin":
+        port = settings.ADMIN_PORT
+    
+    print(f"\n{'='*60}")
+    print(f" Starting RMS on port {port} ({settings.DEPLOYMENT_ENV.upper()} Portal)")
+    print(f"{'='*60}\n")
+    
+    uvicorn.run(app, host="0.0.0.0", port=port)
