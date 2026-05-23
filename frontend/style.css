@@ -83,6 +83,7 @@ body {
     z-index: 9999;
     background: var(--auth-bg);
     overflow: hidden;
+}
 
 /* --- Glassmorphic card --- */
 .auth-container {
@@ -99,6 +100,7 @@ body {
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
     position: relative;
     z-index: 1;
+}
 
 /* Status Messages */
 .status-message {
@@ -130,6 +132,7 @@ body {
     font-size: 1.4rem;
     margin-bottom: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
 
 /* --- Simple brand text --- */
 .auth-brand h1 {
@@ -178,6 +181,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+}
 
 .auth-field label {
     font-size: 0.72rem;
@@ -234,6 +238,7 @@ body {
 
 .auth-btn::after {
     display: none;
+}
 
 .auth-btn:hover {
     transform: translateY(-2px);
