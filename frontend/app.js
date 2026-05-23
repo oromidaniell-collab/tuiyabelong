@@ -396,7 +396,7 @@ async function loadDashboardData() {
 
 // View Management
 function showView(viewId) {
-    const views = ['home', 'property', 'payments', 'maintenance', 'notifications', 'documents', 'feedback', 'settings', 'room-assignment-view'];
+    const views = ['home', 'property', 'payments', 'maintenance', 'notifications', 'documents', 'feedback', 'messages', 'settings', 'room-assignment-view'];
     
     views.forEach(id => {
         const view = document.getElementById(id);
@@ -428,6 +428,7 @@ function showView(viewId) {
     if (viewId === 'maintenance') loadMaintenanceRequests();
     if (viewId === 'documents') loadDocuments();
     if (viewId === 'feedback') loadFeedbackHistory();
+    if (viewId === 'messages') loadMessages();
 }
 
 // Notifications

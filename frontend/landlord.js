@@ -256,6 +256,8 @@ function viewPropertyDetails(id) {
 }
 
 function viewTenantDetails(id) {
+    // Load tenant details view instead of showing alert
+    // This would be implemented with actual tenant data fetching
     alert(`View tenant ${id} details - Coming soon!`);
 }
 

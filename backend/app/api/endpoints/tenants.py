@@ -121,3 +121,18 @@ async def get_tenants(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Tenant))
     return result.scalars().all()
 
+@router.get("/{tenant_id}", response_model=TenantSchema)
+async def get_tenant_details(
+    tenant_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get details of a specific tenant"""
+    result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
+    tenant = result.scalar_one_or_none()
+    
+    if not tenant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+    
+    return tenant
+
+

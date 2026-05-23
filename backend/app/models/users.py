@@ -46,3 +46,5 @@ class User(BaseModel):
     payments = relationship("Payment", back_populates="user")
     documents = relationship("Document", back_populates="uploaded_by")
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
+    sent_messages = relationship("Message", foreign_keys="Message.sender_id", back_populates="sender", cascade="all, delete-orphan")
+    received_messages = relationship("Message", foreign_keys="Message.recipient_id", back_populates="recipient", cascade="all, delete-orphan")

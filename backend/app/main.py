@@ -10,7 +10,7 @@ from app.api.endpoints import (
     auth, tenants, properties, payments, 
     maintenance, dashboard, documents, reports,
     notifications, interaction, monitoring, arrears,
-    utilities
+    utilities, messages
 )
 from datetime import datetime
 from app.core.database import engine, Base, AsyncSessionLocal
@@ -128,6 +128,7 @@ app.include_router(interaction.router, prefix=f"{settings.API_V1_STR}/interactio
 app.include_router(monitoring.router, prefix=f"{settings.API_V1_STR}/monitoring", tags=["Monitoring"])
 app.include_router(arrears.router, prefix=f"{settings.API_V1_STR}/arrears", tags=["Arrears"])
 app.include_router(utilities.router, prefix=f"{settings.API_V1_STR}/utilities", tags=["Utilities"])
+app.include_router(messages.router, prefix=f"{settings.API_V1_STR}/messages", tags=["Messages"])
 
 # Admin Router (New)
 from app.api.endpoints import admin, users

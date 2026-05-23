@@ -139,11 +139,8 @@ async def get_dashboard_metrics(
 ):
     """Get key dashboard metrics"""
     
-    # Count total tenants (using User table to ensure new unassigned tenants are counted)
-    # We use a subquery or join-less count for speed, but ensure it filters by role
-    result = await db.execute(
-        select(func.count(User.id)).where(User.role == UserRole.TENANT)
-    )
+    # Count total tenants from Tenant model (active tenant records)
+    result = await db.execute(select(func.count(Tenant.id)))
     total_tenants = result.scalar() or 0
     
     # Count total properties
