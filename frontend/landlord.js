@@ -1,5 +1,20 @@
 // landlord portal
 // This JavaScript file manages the landlord dashboard, including data fetching, view management, and user interactions for landlords.
+
+// API Base URL configuration for backend access
+const API_BASE_URL = (() => {
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+    
+    if (isLocalhost) {
+        // In local development, use port 8001 for landlord backend
+        return `http://${hostname}:8001`;
+    } else {
+        // In production, use same origin
+        return window.location.origin;
+    }
+})();
+
 let revenueChart = null;
 
     
@@ -20,7 +35,7 @@ async function loadDashboardData() {
     const token = localStorage.getItem('rms-landlord-token');
     
     try {
-        const metricsRes = await fetch('/api/v1/admin/metrics', {
+        const metricsRes = await fetch(`${API_BASE_URL}/api/v1/admin/metrics`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const metrics = await metricsRes.json();
@@ -32,7 +47,7 @@ async function loadDashboardData() {
         
         // Load recent payments for the dashboard
         // This will show the 5 most recent payments on the dashboard
-        const paymentsRes = await fetch('/api/v1/payments/recent', {
+        const paymentsRes = await fetch(`${API_BASE_URL}/api/v1/payments/recent`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const payments = await paymentsRes.json();
@@ -94,7 +109,7 @@ async function loadTenants() {
     const tbody = document.getElementById('tenants-table-body');
     
     try {
-        const res = await fetch('/api/v1/admin/tenants', {
+        const res = await fetch(`${API_BASE_URL}/api/v1/admin/tenants`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const tenants = await res.json();
@@ -131,7 +146,7 @@ async function deleteTenantAccount(userId, name) {
 
     const token = localStorage.getItem('rms-landlord-token');
     try {
-        const res = await fetch(`/api/v1/admin/tenants/${userId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/v1/admin/tenants/${userId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -156,7 +171,7 @@ async function loadPayments() {
     const tbody = document.getElementById('all-payments-table');
     
     try {
-        const res = await fetch('/api/v1/payments/all', {
+        const res = await fetch(`${API_BASE_URL}/api/v1/payments/all`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const payments = await res.json();
@@ -186,7 +201,7 @@ async function loadMaintenanceRequests() {
     const container = document.getElementById('maintenance-requests-list');
     
     try {
-        const res = await fetch('/api/v1/maintenance/all', {
+        const res = await fetch(`${API_BASE_URL}/api/v1/maintenance/all`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const requests = await res.json();
@@ -268,7 +283,7 @@ function sendMessageToTenant(id) {
 async function updateRequestStatus(requestId, status) {
     const token = localStorage.getItem('rms-landlord-token');
     try {
-        await fetch(`/api/v1/maintenance/${requestId}/status`, {
+        await fetch(`${API_BASE_URL}/api/v1/maintenance/${requestId}/status`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -345,7 +360,7 @@ async function submitUtilityCharge(event, utilityType) {
     }
 
     try {
-        const res = await fetch('/api/v1/utilities/', {
+        const res = await fetch(`${API_BASE_URL}/api/v1/utilities/`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -384,7 +399,7 @@ async function loadUtilityCharges() {
     if (monthFilter) url += `billing_month=${monthFilter}&`;
     
     try {
-        const res = await fetch(url, {
+        const res = await fetch(`${API_BASE_URL}${url}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const charges = await res.json();
@@ -478,7 +493,7 @@ async function loadUtilityProfitSummary() {
     const token = localStorage.getItem('rms-landlord-token');
     
     try {
-        const res = await fetch('/api/v1/utilities/profit-summary', {
+        const res = await fetch(`${API_BASE_URL}/api/v1/utilities/profit-summary`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -497,7 +512,7 @@ async function viewUtilityInvoice(unitId, billingMonth) {
     const token = localStorage.getItem('rms-landlord-token');
     
     try {
-        const res = await fetch(`/api/v1/utilities/statement/${unitId}?billing_month=${billingMonth}`, {
+        const res = await fetch(`${API_BASE_URL}/api/v1/utilities/statement/${unitId}?billing_month=${billingMonth}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const statement = await res.json();
@@ -640,7 +655,7 @@ async function submitBroadcast(event) {
     const message = document.getElementById('broadcast-message').value;
 
     try {
-        const res = await fetch('/api/v1/notifications/', {
+        const res = await fetch(`${API_BASE_URL}/api/v1/notifications/`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -673,7 +688,7 @@ async function loadFeedback() {
     if (!container) return;
 
     try {
-        const res = await fetch('/api/v1/interaction/feedback', {
+        const res = await fetch(`${API_BASE_URL}/api/v1/interaction/feedback`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -711,13 +726,13 @@ async function generateReport() {
         
         if (type === 'revenue') {
             // Fetch summary metrics
-            const res = await fetch('/api/v1/admin/metrics', {
+            const res = await fetch(`${API_BASE_URL}/api/v1/admin/metrics`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const metrics = await res.json();
             
             // Fetch utility summary
-            const utilRes = await fetch('/api/v1/utilities/summary', {
+            const utilRes = await fetch(`${API_BASE_URL}/api/v1/utilities/summary`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const utilSummary = await utilRes.json();

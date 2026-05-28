@@ -13,7 +13,19 @@ function switchRole(role) {
     if (document.getElementById('users').classList.contains('active')) fetchTenants();
 }
 
-const ADMIN_API_BASE_URL = window.location.origin;
+// API Base URL configuration for admin backend access
+const ADMIN_API_BASE_URL = (() => {
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+    
+    if (isLocalhost) {
+        // In local development, use port 8002 for admin backend
+        return `http://${hostname}:8002`;
+    } else {
+        // In production, use same origin
+        return window.location.origin;
+    }
+})();
 
 async function fetchAdminStats() {
     try {

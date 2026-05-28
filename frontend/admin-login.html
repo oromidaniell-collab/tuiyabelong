@@ -65,26 +65,26 @@
                 <div class="step-dot" id="dot-2"></div>
             </div>
 
-            <!-- Step 1: Secret Access Key -->
+            <!-- Step 1: Email -->
             <div class="step-panel active" id="step-1">
                 <div class="form-group" style="margin-bottom:0.5rem;">
-                    <input type="password" id="admin-access-key" placeholder="Enter Access Key" autocomplete="off">
+                    <input type="email" id="admin-email" placeholder="Enter Email Address" autocomplete="email">
                 </div>
-                <p class="error-msg" id="key-error">❌ Invalid access key. Please try again.</p>
-                <button class="btn-primary btn-block" onclick="verifyAdminKey()" style="margin-top:1rem;">
-                    <i class="fas fa-unlock-alt"></i> Verify Key
+                <p class="error-msg" id="email-error"> Invalid email format. Please try again.</p>
+                <button class="btn-primary btn-block" onclick="verifyAdminEmail()" style="margin-top:1rem;">
+                    <i class="fas fa-arrow-right"></i> Next
                 </button>
                 <p style="font-size:0.8rem;color:var(--text-muted);margin-top:1rem;">
-                    <i class="fas fa-info-circle"></i> Enter the system access key provided by your IT administrator.
+                    <i class="fas fa-info-circle"></i> Enter your registered email address.
                 </p>
             </div>
 
             <!-- Step 2: Password -->
             <div class="step-panel" id="step-2">
                 <div class="form-group" style="margin-bottom:0.5rem;">
-                    <input type="password" id="admin-password" placeholder="Enter Admin Password" autocomplete="current-password">
+                    <input type="password" id="admin-password" placeholder="Enter Password" autocomplete="current-password">
                 </div>
-                <p class="error-msg" id="pass-error">❌ Incorrect password. Please try again.</p>
+                <p class="error-msg" id="pass-error"> Incorrect password. Please try again.</p>
                 <button class="btn-primary btn-block" onclick="verifyAdminPassword()" style="margin-top:1rem;">
                     <i class="fas fa-sign-in-alt"></i> Sign In as Admin
                 </button>
@@ -100,43 +100,83 @@
     </div>
 
     <script>
-        const ADMIN_ACCESS_KEY = '2026';
-        const ADMIN_PASSWORD   = 'admin@2026';
+        // Get API base URL - should be the backend server
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:8002'  // Admin portal on port 8002
+            : window.location.origin;  // Same origin in production
 
-        function verifyAdminKey() {
-            const key = document.getElementById('admin-access-key').value.trim();
-            const errEl = document.getElementById('key-error');
+        let adminEmail = '';
 
-            if (key === ADMIN_ACCESS_KEY) {
-                errEl.style.display = 'none';
-                document.getElementById('step-1').classList.remove('active');
-                document.getElementById('step-2').classList.add('active');
-                document.getElementById('dot-1').classList.replace('active', 'done');
-                document.getElementById('dot-2').classList.add('active');
-                document.getElementById('admin-password').focus();
-            } else {
+        async function verifyAdminEmail() {
+            const email = document.getElementById('admin-email').value.trim();
+            const errEl = document.getElementById('email-error');
+
+            // Basic email validation
+            if (!email.includes('@') || !email.includes('.')) {
                 errEl.style.display = 'block';
-                document.getElementById('admin-access-key').value = '';
-                document.getElementById('admin-access-key').focus();
+                return;
             }
+
+            errEl.style.display = 'none';
+            adminEmail = email;
+            
+            // Move to password step
+            document.getElementById('step-1').classList.remove('active');
+            document.getElementById('step-2').classList.add('active');
+            document.getElementById('dot-1').classList.replace('active', 'done');
+            document.getElementById('dot-2').classList.add('active');
+            document.getElementById('admin-password').focus();
         }
 
-        function verifyAdminPassword() {
-            const pass  = document.getElementById('admin-password').value;
+        async function verifyAdminPassword() {
+            const password = document.getElementById('admin-password').value;
             const errEl = document.getElementById('pass-error');
-            const btn   = document.querySelector('#step-2 .btn-primary');
+            const btn = document.querySelector('#step-2 .btn-primary');
 
-            if (pass === ADMIN_PASSWORD) {
-                errEl.style.display = 'none';
+            if (!password) {
+                errEl.textContent = ' Password is required.';
+                errEl.style.display = 'block';
+                return;
+            }
+
+            try {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-                localStorage.setItem('rms-admin-token', 'admin-local-2026');
-                localStorage.setItem('rms-admin-role', 'admin');
-                setTimeout(() => { window.location.href = 'admin.html'; }, 600);
-            } else {
+
+                // Call backend login endpoint
+                const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `username=${encodeURIComponent(adminEmail)}&password=${encodeURIComponent(password)}`
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.access_token) {
+                    errEl.style.display = 'none';
+                    // Store token in localStorage
+                    localStorage.setItem('rms-admin-token', data.access_token);
+                    localStorage.setItem('rms-admin-role', 'admin');
+                    localStorage.setItem('rms-admin-email', adminEmail);
+                    
+                    // Redirect to admin portal
+                    setTimeout(() => { window.location.href = 'admin.html'; }, 600);
+                } else {
+                    errEl.textContent = ` ${data.detail || 'Incorrect email or password. Please try again.'}`;
+                    errEl.style.display = 'block';
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In as Admin';
+                    document.getElementById('admin-password').value = '';
+                    document.getElementById('admin-password').focus();
+                }
+            } catch (err) {
+                console.error('Login error:', err);
+                errEl.textContent = ` Error connecting to server. Please ensure the backend is running on ${API_BASE_URL}`;
                 errEl.style.display = 'block';
-                document.getElementById('admin-password').value = '';
-                document.getElementById('admin-password').focus();
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In as Admin';
             }
         }
 
@@ -147,31 +187,12 @@
             document.getElementById('dot-1').classList.replace('done', 'active');
             document.getElementById('pass-error').style.display = 'none';
             document.getElementById('admin-password').value = '';
-            document.getElementById('admin-access-key').focus();
-        }
-
-        // Premium Particles
-        function initAuthParticles() {
-            const container = document.querySelector('.auth-particles');
-            if (!container) return;
-            container.innerHTML = '';
-            for (let i = 0; i < 20; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                const size = Math.random() * 5 + 2;
-                p.style.width = `${size}px`;
-                p.style.height = `${size}px`;
-                p.style.left = `${Math.random() * 100}%`;
-                p.style.animationDuration = `${Math.random() * 10 + 10}s`;
-                p.style.animationDelay = `${Math.random() * 5}s`;
-                container.appendChild(p);
-            }
+            document.getElementById('admin-email').focus();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            initAuthParticles();
-            document.getElementById('admin-access-key').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') verifyAdminKey();
+            document.getElementById('admin-email').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') verifyAdminEmail();
             });
             document.getElementById('admin-password').addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') verifyAdminPassword();
