@@ -703,6 +703,110 @@ async function loadFeedbackHistory() {
     }
 }
 
+// Messages
+async function loadMessages() {
+    const container = document.getElementById('message-recipient');
+    const inboxContainer = document.getElementById('message-inbox');
+    
+    try {
+        // Load available recipients (admins and landlords)
+        const users = await apiCall('/api/v1/users/contacts');
+        
+        if (users && users.length > 0) {
+            container.innerHTML = '<option value="">Select recipient...</option>' + 
+                users.map(u => `<option value="${u.id}">${u.first_name} ${u.last_name} (${u.role})</option>`).join('');
+        }
+        
+        // Load inbox messages
+        const messages = await apiCall('/api/v1/messages/inbox');
+        
+        if (!messages || messages.length === 0) {
+            inboxContainer.innerHTML = '<div class="card">No messages yet.</div>';
+            return;
+        }
+        
+        inboxContainer.innerHTML = `
+            <div class="messages-list">
+                ${messages.map(msg => `
+                    <div class="message-item ${msg.is_read ? '' : 'unread'}" onclick="openMessage(${msg.id})">
+                        <div class="message-header">
+                            <strong class="sender-name">Admin/Landlord</strong>
+                            <span class="message-date">${new Date(msg.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div class="message-subject">${escapeHtml(msg.subject)}</div>
+                        <div class="message-preview">${escapeHtml(msg.body.substring(0, 80))}...</div>
+                        ${!msg.is_read ? '<span class="unread-indicator"></span>' : ''}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } catch (err) {
+        console.error('Error loading messages:', err);
+        inboxContainer.innerHTML = '<div class="card">Error loading messages: ' + err.message + '</div>';
+    }
+}
+
+async function handleSendMessage(event) {
+    event.preventDefault();
+    const token = localStorage.getItem('rms-token');
+    
+    const msgData = {
+        recipient_id: parseInt(document.getElementById('message-recipient').value),
+        subject: document.getElementById('message-subject').value,
+        body: document.getElementById('message-body').value
+    };
+    
+    if (!msgData.recipient_id) {
+        alert('Please select a recipient.');
+        return;
+    }
+    
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/messages/`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(msgData)
+        });
+        
+        if (res.ok) {
+            alert('Message sent successfully!');
+            document.getElementById('send-message-form').reset();
+            loadMessages();
+        } else {
+            const data = await res.json();
+            alert('Failed to send message: ' + (data.detail || 'Unknown error'));
+        }
+    } catch (err) {
+        console.error('Error sending message:', err);
+        alert('Network error. Please try again.');
+    }
+}
+
+async function openMessage(messageId) {
+    const token = localStorage.getItem('rms-token');
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/messages/${messageId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+            const msg = await res.json();
+            alert(`Subject: ${msg.subject}\n\n${msg.body}`);
+            // Mark as read
+            await fetch(`${API_BASE_URL}/api/v1/messages/${messageId}/read`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            loadMessages();
+        }
+    } catch (err) {
+        console.error('Error opening message:', err);
+    }
+}
+
 // Payment Methods
 function payViaMpesa() {
     alert('M-Pesa Payment\n\nPaybill: 123456\nAccount: Your phone number\nAmount: Monthly rent amount\n\nWe will confirm your payment within 24 hours.');

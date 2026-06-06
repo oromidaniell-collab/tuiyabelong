@@ -733,13 +733,15 @@ async function loadFeedback() {
         }
 
         container.innerHTML = feedbacks.map(f => `
-            <div style="border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
-                    <strong>${escapeHtml(f.subject)}</strong>
+            <div style="padding: 1rem; border-bottom: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; align-items:start;">
+                    <div>
+                        <strong style="display:block; color:var(--text-main);">${escapeHtml(f.subject)}</strong>
+                        <small style="color:var(--accent);">From: ${escapeHtml(f.tenant_name)}</small>
+                    </div>
                     <small style="color:var(--text-muted);">${new Date(f.created_at).toLocaleDateString()}</small>
                 </div>
-                <p style="font-size:0.9rem; margin:0 0 0.5rem 0;">${escapeHtml(f.message)}</p>
-                <div style="font-size:0.8rem; color:var(--accent);">From: ${escapeHtml(f.tenant_name)}</div>
+                <p style="margin:0.5rem 0; color:var(--text-main); font-size:0.95rem;">${escapeHtml(f.message)}</p>
             </div>
         `).join('');
     } catch (err) {
