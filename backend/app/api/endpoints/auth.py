@@ -29,31 +29,48 @@ async def get_current_user(db: AsyncSession = Depends(get_db), token: str = Depe
         headers={"WWW-Authenticate": "Bearer"},
     )
     
-    # Fixed access tokens for single-owner admin/landlord portals
-    if token == "admin-local-2026":
-        result = await db.execute(select(User).filter(User.role == UserRole.ADMIN))
-        user = result.scalars().first()
-        if user: return user
-        return User(id=999, email="admin@rms.local", role=UserRole.ADMIN, first_name="Admin", last_name="Local")
-        
-    if token == "landlord-local-2026":
-        result = await db.execute(select(User).filter(User.role == UserRole.LANDLORD))
-        user = result.scalars().first()
-        if user: return user
-        return User(id=998, email="landlord@rms.local", role=UserRole.LANDLORD, first_name="Landlord", last_name="Local")
+    # Fixed/legacy portal tokens for single-owner admin/landlord portals
+    # (Used for local testing and for deployments that skip DB bootstrap.)
+    if token in ("admin-local-2026", "landlord-local-2026"):
+        if token == "admin-local-2026":
+            result = await db.execute(select(User).filter(User.role == UserRole.ADMIN))
+            user = result.scalars().first()
+            if user:
+                return user
+            return User(id=999, email="admin@rms.local", role=UserRole.ADMIN, first_name="Admin", last_name="Local")
+
+        if token == "landlord-local-2026":
+            result = await db.execute(select(User).filter(User.role == UserRole.LANDLORD))
+            user = result.scalars().first()
+            if user:
+                return user
+            return User(id=998, email="landlord@rms.local", role=UserRole.LANDLORD, first_name="Landlord", last_name="Local")
+
 
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         email: str = payload.get("sub")
-        if email is None:
+        role_claim = payload.get("role")
+        if email is None and role_claim is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    result = await db.execute(select(User).filter(User.email == email))
-    user = result.scalars().first()
-    if user is None:
-        raise credentials_exception
-    return user
+
+    # If DB has bootstrap users, use them.
+    if email:
+        result = await db.execute(select(User).filter(User.email == email))
+        user = result.scalars().first()
+        if user is not None:
+            return user
+
+    # Portal-login tokens are single-owner; allow fallback by role claim
+    # so endpoints work even if portal users are not present in the database.
+    if role_claim == "admin":
+        return User(id=999, email="admin@rms.local", role=UserRole.ADMIN, first_name="Admin", last_name="Local")
+    if role_claim == "landlord":
+        return User(id=998, email="landlord@rms.local", role=UserRole.LANDLORD, first_name="Landlord", last_name="Local")
+
+    raise credentials_exception
 
 router = APIRouter()
 
