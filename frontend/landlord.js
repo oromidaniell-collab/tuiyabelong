@@ -155,7 +155,7 @@ async function deleteTenantAccount(userId, name) {
             alert('Tenant account deleted successfully.');
             // Refresh both the list and the dashboard metrics
             loadTenants();
-            loadDashboardMetrics();
+            loadDashboardData();
         } else {
             const data = await res.json();
             alert('Failed to delete account: ' + (data.detail || 'Unknown error'));
