@@ -33,3 +33,8 @@ node_modules/
 # Logs
 *.log
 reset_password.py
+FIXES_APPLIED.md
+/scratch
+scratch/
+.sixth_sense/
+.sixth/

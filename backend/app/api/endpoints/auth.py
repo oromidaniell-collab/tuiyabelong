@@ -307,6 +307,68 @@ async def login(request: Request, response: Response, form_data: OAuth2PasswordR
 async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
+class PortalLoginRequest(BaseModel):
+    access_key: str
+    password: str
+    portal: str  # "admin" or "landlord"
+
+@router.post("/portal-login", response_model=Token)
+async def portal_login(request: Request, req: PortalLoginRequest):
+    """
+    Secure login for admin and landlord portals.
+    Validates access key and password against environment variables.
+    Returns JWT token if valid.
+    """
+    client_ip = get_client_ip(request)
+    
+    # Rate limit by IP: 20 attempts per hour
+    if not login_limiter.check_rate_limit(client_ip, limit=20, window=3600):
+        raise HTTPException(status_code=429, detail="Too many login attempts. Please try again later.")
+    
+    portal = req.portal.lower()
+    
+    if portal == "admin":
+        # Validate admin credentials
+        if req.access_key == settings.ADMIN_PORTAL_ACCESS_KEY and req.password == settings.ADMIN_PORTAL_PASSWORD:
+            access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+            # Create token with admin role
+            access_token = create_access_token(
+                data={"sub": "admin@rms.local", "role": "admin"}, 
+                expires_delta=access_token_expires
+            )
+            login_limiter.reset(client_ip)
+            return {"access_token": access_token, "token_type": "bearer"}
+        else:
+            logger.warning(f"Failed admin portal login from IP {client_ip}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid access key or password",
+            )
+    
+    elif portal == "landlord":
+        # Validate landlord credentials
+        if req.access_key == settings.LANDLORD_PORTAL_ACCESS_KEY and req.password == settings.LANDLORD_PORTAL_PASSWORD:
+            access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+            # Create token with landlord role
+            access_token = create_access_token(
+                data={"sub": "landlord@rms.local", "role": "landlord"}, 
+                expires_delta=access_token_expires
+            )
+            login_limiter.reset(client_ip)
+            return {"access_token": access_token, "token_type": "bearer"}
+        else:
+            logger.warning(f"Failed landlord portal login from IP {client_ip}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid access key or password",
+            )
+    
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid portal. Must be 'admin' or 'landlord'",
+        )
+
 @router.post("/reset-password")
 async def reset_password(email: EmailStr, db: AsyncSession = Depends(get_db)):
     # Placeholder for password reset logic (sending email)

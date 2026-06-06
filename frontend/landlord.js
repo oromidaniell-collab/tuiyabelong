@@ -271,9 +271,31 @@ function viewPropertyDetails(id) {
 }
 
 function viewTenantDetails(id) {
-    // Load tenant details view instead of showing alert
-    // This would be implemented with actual tenant data fetching
-    alert(`View tenant ${id} details - Coming soon!`);
+    const token = localStorage.getItem('rms-landlord-token');
+    
+    (async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/v1/tenants/${id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const tenant = await res.json();
+
+            if (res.ok) {
+                // Display tenant details in an alert (can be enhanced with a modal)
+                const details = `Tenant: ${tenant.first_name} ${tenant.last_name}
+Email: ${tenant.email}
+Phone: ${tenant.phone || 'N/A'}
+Unit: ${tenant.unit_id || 'Unassigned'}
+Status: ${tenant.status}`;
+                alert(details);
+            } else {
+                alert(`Error: ${tenant.detail || 'Failed to load tenant details'}`);
+            }
+        } catch (err) {
+            console.error('Error:', err);
+            alert('Error loading tenant details. Please try again.');
+        }
+    })();
 }
 
 function sendMessageToTenant(id) {

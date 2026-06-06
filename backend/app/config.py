@@ -73,6 +73,13 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
+    # Portal Login Credentials (Admin & Landlord portals)
+    # Define in .env file: ADMIN_PORTAL_ACCESS_KEY, ADMIN_PORTAL_PASSWORD, LANDLORD_PORTAL_ACCESS_KEY, LANDLORD_PORTAL_PASSWORD
+    ADMIN_PORTAL_ACCESS_KEY: str = os.getenv("ADMIN_PORTAL_ACCESS_KEY", "2026")
+    ADMIN_PORTAL_PASSWORD: str = os.getenv("ADMIN_PORTAL_PASSWORD", "admin@2026")
+    LANDLORD_PORTAL_ACCESS_KEY: str = os.getenv("LANDLORD_PORTAL_ACCESS_KEY", "2026")
+    LANDLORD_PORTAL_PASSWORD: str = os.getenv("LANDLORD_PORTAL_PASSWORD", "landlord@2026")
+    
     # Email (Mapped to .env)
     SMTP_PORT: Optional[int] = os.getenv("SMTP_PORT")
     SMTP_SERVER: Optional[str] = os.getenv("SMTP_SERVER")

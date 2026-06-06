@@ -77,24 +77,24 @@
                 <div class="step-dot" id="dot-2"></div>
             </div>
 
-            <!-- Step 1: Email -->
+            <!-- Step 1: Secret Access Key -->
             <div class="step-panel active" id="step-1">
                 <div class="form-group" style="margin-bottom:0.5rem;">
-                    <input type="email" id="landlord-email" placeholder="Enter Email Address" autocomplete="email">
+                    <input type="password" id="landlord-access-key" placeholder="Enter Access Key" autocomplete="off">
                 </div>
-                <p class="error-msg" id="email-error"> Invalid email format. Please try again.</p>
-                <button class="btn-primary btn-block" onclick="verifyLandlordEmail()" style="margin-top:1rem;">
-                    <i class="fas fa-arrow-right"></i> Next
+                <p class="error-msg" id="key-error"> Invalid access key. Please try again.</p>
+                <button class="btn-primary btn-block" onclick="verifyLandlordKey()" style="margin-top:1rem;">
+                    <i class="fas fa-unlock-alt"></i> Verify Key
                 </button>
                 <p style="font-size:0.8rem;color:var(--text-muted);margin-top:1rem;">
-                    <i class="fas fa-info-circle"></i> Enter your registered email address.
+                    <i class="fas fa-info-circle"></i> Enter the access key provided by the system administrator.
                 </p>
             </div>
 
             <!-- Step 2: Password -->
             <div class="step-panel" id="step-2">
                 <div class="form-group" style="margin-bottom:0.5rem;">
-                    <input type="password" id="landlord-password" placeholder="Enter Password" autocomplete="current-password">
+                    <input type="password" id="landlord-password" placeholder="Enter Landlord Password" autocomplete="current-password">
                 </div>
                 <p class="error-msg" id="pass-error"> Incorrect password. Please try again.</p>
                 <button class="btn-primary btn-block" onclick="verifyLandlordPassword()" style="margin-top:1rem;">
@@ -112,25 +112,33 @@
     </div>
 
     <script>
-        // Get API base URL - should be the backend server
-        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:8001'  // Landlord portal on port 8001
-            : window.location.origin;  // Same origin in production
+        // API Base URL configuration
+        const API_BASE_URL = (() => {
+            const hostname = window.location.hostname;
+            const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+            
+            if (isLocalhost) {
+                // In local development, use port 8001 for landlord backend
+                return `http://${hostname}:8001`;
+            } else {
+                // In production, use same origin
+                return window.location.origin;
+            }
+        })();
 
-        let landlordEmail = '';
+        function verifyLandlordKey() {
+            const key = document.getElementById('landlord-access-key').value.trim();
+            const errEl = document.getElementById('key-error');
 
-        async function verifyLandlordEmail() {
-            const email = document.getElementById('landlord-email').value.trim();
-            const errEl = document.getElementById('email-error');
-
-            // Basic email validation
-            if (!email.includes('@') || !email.includes('.')) {
+            if (!key) {
+                errEl.textContent = ' Access key is required.';
                 errEl.style.display = 'block';
                 return;
             }
 
             errEl.style.display = 'none';
-            landlordEmail = email;
+            // Store key temporarily in session
+            sessionStorage.setItem('temp-access-key', key);
             
             // Move to password step
             document.getElementById('step-1').classList.remove('active');
@@ -142,6 +150,7 @@
 
         async function verifyLandlordPassword() {
             const password = document.getElementById('landlord-password').value;
+            const accessKey = sessionStorage.getItem('temp-access-key');
             const errEl = document.getElementById('pass-error');
             const btn = document.querySelector('#step-2 .btn-primary');
 
@@ -155,28 +164,32 @@
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
 
-                // Call backend login endpoint
-                const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+                // Call secure backend login endpoint
+                const response = await fetch(`${API_BASE_URL}/api/v1/auth/portal-login`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Type': 'application/json',
                     },
-                    body: `username=${encodeURIComponent(landlordEmail)}&password=${encodeURIComponent(password)}`
+                    body: JSON.stringify({
+                        access_key: accessKey,
+                        password: password,
+                        portal: 'landlord'
+                    })
                 });
 
                 const data = await response.json();
 
                 if (response.ok && data.access_token) {
                     errEl.style.display = 'none';
-                    // Store token in localStorage
+                    // Store token securely
                     localStorage.setItem('rms-landlord-token', data.access_token);
                     localStorage.setItem('rms-landlord-role', 'landlord');
-                    localStorage.setItem('rms-landlord-email', landlordEmail);
+                    sessionStorage.removeItem('temp-access-key');
                     
                     // Redirect to landlord portal
                     setTimeout(() => { window.location.href = 'landlord.html'; }, 600);
                 } else {
-                    errEl.textContent = ` ${data.detail || 'Incorrect email or password. Please try again.'}`;
+                    errEl.textContent = ` ${data.detail || 'Invalid access key or password.'}`;
                     errEl.style.display = 'block';
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In as Landlord';
@@ -185,7 +198,7 @@
                 }
             } catch (err) {
                 console.error('Login error:', err);
-                errEl.textContent = ` Error connecting to server. Please ensure the backend is running on ${API_BASE_URL}`;
+                errEl.textContent = ` Error connecting to server. Ensure backend is running on ${API_BASE_URL}`;
                 errEl.style.display = 'block';
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In as Landlord';
@@ -199,12 +212,31 @@
             document.getElementById('dot-1').classList.replace('done', 'active');
             document.getElementById('pass-error').style.display = 'none';
             document.getElementById('landlord-password').value = '';
-            document.getElementById('landlord-email').focus();
+            document.getElementById('landlord-access-key').focus();
+        }
+
+        // Premium Particles
+        function initAuthParticles() {
+            const container = document.querySelector('.auth-particles');
+            if (!container) return;
+            container.innerHTML = '';
+            for (let i = 0; i < 20; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const size = Math.random() * 5 + 2;
+                p.style.width = `${size}px`;
+                p.style.height = `${size}px`;
+                p.style.left = `${Math.random() * 100}%`;
+                p.style.animationDuration = `${Math.random() * 10 + 10}s`;
+                p.style.animationDelay = `${Math.random() * 5}s`;
+                container.appendChild(p);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('landlord-email').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') verifyLandlordEmail();
+            initAuthParticles();
+            document.getElementById('landlord-access-key').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') verifyLandlordKey();
             });
             document.getElementById('landlord-password').addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') verifyLandlordPassword();
