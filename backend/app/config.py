@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     DEPLOYMENT_ENV: str = os.getenv("DEPLOYMENT_ENV", "development")
     
     BACKEND_CORS_ORIGINS: List[str] = [
-        "https://rental-sigma-five.vercel.app",
+        "https://tuiyabelong.vercel.app",
         "https://tuiyabelong.com",
         "https://www.tuiyabelong.com",
         "http://localhost:3000",

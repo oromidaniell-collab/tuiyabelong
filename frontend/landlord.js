@@ -416,12 +416,12 @@ async function loadUtilityCharges() {
     const typeFilter = document.getElementById('filter-utility-type')?.value || '';
     const monthFilter = document.getElementById('filter-utility-month')?.value || '';
     
-    let url = '/api/v1/utilities/?';
+    let url = `${API_BASE_URL}/api/v1/utilities/?`;
     if (typeFilter) url += `utility_type=${typeFilter}&`;
     if (monthFilter) url += `billing_month=${monthFilter}&`;
     
     try {
-        const res = await fetch(`${API_BASE_URL}${url}`, {
+        const res = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const charges = await res.json();
@@ -466,7 +466,7 @@ async function toggleUtilityStatus(chargeId, currentStatus) {
     const newStatus = currentStatus === 'pending' ? 'paid' : 'pending';
     
     try {
-        const res = await fetch(`/api/v1/utilities/${chargeId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/v1/utilities/${chargeId}`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -493,7 +493,7 @@ async function deleteUtilityCharge(chargeId) {
     const token = localStorage.getItem('rms-landlord-token');
     
     try {
-        const res = await fetch(`/api/v1/utilities/${chargeId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/v1/utilities/${chargeId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });

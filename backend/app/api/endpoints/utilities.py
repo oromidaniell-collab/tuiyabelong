@@ -127,54 +127,6 @@ async def list_utility_charges(
     return charges
 
 
-@router.put("/{charge_id}")
-async def update_utility_charge(
-    charge_id: int,
-    update_in: UtilityChargeUpdate,
-    current_user: User = Depends(get_current_owner),
-    db: AsyncSession = Depends(get_db)
-):
-    """Update a utility charge (amount, status, notes)."""
-    result = await db.execute(select(UtilityCharge).where(UtilityCharge.id == charge_id))
-    charge = result.scalars().first()
-    if not charge:
-        raise HTTPException(status_code=404, detail="Utility charge not found")
-    
-    if update_in.amount is not None:
-        charge.amount = update_in.amount
-    if update_in.units_consumed is not None:
-        charge.units_consumed = update_in.units_consumed
-    if update_in.status is not None:
-        charge.status = update_in.status
-    if update_in.notes is not None:
-        charge.notes = update_in.notes
-    
-    await db.commit()
-    return {"success": True, "message": "Utility charge updated"}
-
-
-@router.delete("/{charge_id}")
-async def delete_utility_charge(
-    charge_id: int,
-    current_user: User = Depends(get_current_owner),
-    db: AsyncSession = Depends(get_db)
-):
-    """Delete a utility charge."""
-    result = await db.execute(select(UtilityCharge).where(UtilityCharge.id == charge_id))
-    charge = result.scalars().first()
-    if not charge:
-        raise HTTPException(status_code=404, detail="Utility charge not found")
-    
-    await db.delete(charge)
-    await db.commit()
-    return {"success": True, "message": "Utility charge deleted"}
-
-
-# ── Statements removed (Global Expenses Only) ─────────────────
-
-
-# ── Profit Summary ──────────────────────────────────────────
-
 @router.get("/profit-summary", response_model=UtilityProfitSummary)
 async def get_utility_profit_summary(
     billing_month: Optional[str] = Query(None, description="Filter by billing month"),
@@ -260,17 +212,58 @@ async def get_utility_profit_summary(
     )
     pending_count = result.scalar() or 0
     
-    total_utility_expense = total_water + total_wifi
-    
     return UtilityProfitSummary(
         total_rent_income=total_rent,
         total_water_expense=total_water,
         total_wifi_expense=total_wifi,
-        total_utility_expense=total_utility_expense,
-        net_profit=total_rent - total_utility_expense,
+        total_utility_expense=total_water + total_wifi,
+        net_profit=total_rent - (total_water + total_wifi),
         total_water_units=total_water_units,
         charge_count=charge_count,
         paid_count=paid_count,
         pending_count=pending_count,
         billing_month=billing_month
     )
+
+
+@router.put("/{charge_id}")
+async def update_utility_charge(
+    charge_id: int,
+    update_in: UtilityChargeUpdate,
+    current_user: User = Depends(get_current_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update a utility charge (amount, status, notes)."""
+    result = await db.execute(select(UtilityCharge).where(UtilityCharge.id == charge_id))
+    charge = result.scalars().first()
+    if not charge:
+        raise HTTPException(status_code=404, detail="Utility charge not found")
+    
+    if update_in.amount is not None:
+        charge.amount = update_in.amount
+    if update_in.units_consumed is not None:
+        charge.units_consumed = update_in.units_consumed
+    if update_in.status is not None:
+        charge.status = update_in.status
+    if update_in.notes is not None:
+        charge.notes = update_in.notes
+    
+    await db.commit()
+    return {"success": True, "message": "Utility charge updated"}
+
+
+@router.delete("/{charge_id}")
+async def delete_utility_charge(
+    charge_id: int,
+    current_user: User = Depends(get_current_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete a utility charge."""
+    result = await db.execute(select(UtilityCharge).where(UtilityCharge.id == charge_id))
+    charge = result.scalars().first()
+    if not charge:
+        raise HTTPException(status_code=404, detail="Utility charge not found")
+    
+    await db.delete(charge)
+    await db.commit()
+    return {"success": True, "message": "Utility charge deleted"}
