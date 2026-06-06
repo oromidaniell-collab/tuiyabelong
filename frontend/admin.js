@@ -9,7 +9,6 @@ function switchRole(role) {
     localStorage.setItem('rms-admin-role', role);
     console.log(`Switched to ${role} view`);
     fetchAdminStats();
-    fetchAINarrative();
     if (document.getElementById('users').classList.contains('active')) fetchTenants();
 }
 
@@ -42,6 +41,8 @@ async function fetchAdminStats() {
         console.error('Error fetching admin stats:', error);
     }
 }
+
+// Removed: fetchAINarrative() function
 
 function showAdminView(viewId, event) {
     if (event && typeof event.preventDefault === 'function') {
@@ -83,27 +84,6 @@ async function fetchTenants() {
         });
     } catch (error) {
         console.error('Error fetching tenants:', error);
-    }
-}
-
-async function fetchAINarrative() {
-    const aiPanel = document.getElementById('ai-insights');
-    const aiText = document.getElementById('ai-narrative');
-    if (!aiPanel || !aiText) return;
-
-    try {
-        const token = localStorage.getItem('rms-admin-token');
-        const res = await fetch(`${ADMIN_API_BASE_URL}/api/v1/reports/ai-narrative`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-            const data = await res.json();
-            aiText.textContent = data.narrative;
-            aiPanel.style.display = 'block';
-        }
-    } catch (error) {
-        console.error('Error fetching AI narrative:', error);
     }
 }
 

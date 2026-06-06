@@ -275,18 +275,28 @@ function viewTenantDetails(id) {
     
     (async () => {
         try {
-            const res = await fetch(`${API_BASE_URL}/api/v1/tenants/${id}`, {
+            const res = await fetch(`${API_BASE_URL}/api/v1/admin/tenants/${id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const tenant = await res.json();
 
             if (res.ok) {
-                // Display tenant details in an alert (can be enhanced with a modal)
-                const details = `Tenant: ${tenant.first_name} ${tenant.last_name}
+                // Display tenant details in a formatted popup
+                const details = `
+TENANT DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Name: ${tenant.name}
 Email: ${tenant.email}
-Phone: ${tenant.phone || 'N/A'}
-Unit: ${tenant.unit_id || 'Unassigned'}
-Status: ${tenant.status}`;
+Phone: ${tenant.phone}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Property: ${tenant.property_name}
+Unit: ${tenant.unit_number}
+Monthly Rent: Ksh ${(tenant.monthly_rent || 0).toLocaleString()}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status: ${tenant.status}
+Arrears: Ksh ${(tenant.arrears || 0).toLocaleString()}
+Last Payment: ${tenant.last_payment_date ? new Date(tenant.last_payment_date).toLocaleDateString() : 'N/A'}
+`;
                 alert(details);
             } else {
                 alert(`Error: ${tenant.detail || 'Failed to load tenant details'}`);
