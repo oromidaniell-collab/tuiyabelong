@@ -146,11 +146,14 @@ async def trigger_reminders():
 async def on_startup():
     logger.info("Initializing database tables...")
     try:
+        # Import all models that define tables before calling create_all.
         from app.core.database import engine, Base
         import app.models.users
         import app.models.property
         import app.models.unit
         import app.models.tenant
+        import app.models.payment
+        import app.models.notification
         import app.models.utility
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
@@ -171,12 +174,8 @@ async def ping():
     logger.debug("Ping endpoint reached")
     return {"status": "pong", "timestamp": datetime.utcnow().isoformat()}
 
-# Redirect admin/landlord UI requests on port 8001 to separate ports
 
-
-# Mount static files
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# Resilient path finding: local dev uses ../../frontend, Vercel uses ../frontend or relative to root
 potential_paths = [
     os.path.abspath(os.path.join(BASE_DIR, "../../frontend")),
     os.path.abspath(os.path.join(BASE_DIR, "../frontend")),
@@ -195,7 +194,7 @@ if FRONTEND_DIR:
 else:
     logger.warning("Frontend directory not found. Static file serving disabled.")
 
-# Vercel handler export
+
 handler = app
 
 @app.get("/admin")
@@ -241,7 +240,7 @@ async def serve_frontend(request: Request, full_path: str):
     if os.path.isfile(file_path):
         return FileResponse(file_path)
     
-    # For routes that don't match files, serve index.html (SPA support)
+
     index_path = os.path.join(FRONTEND_DIR, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
@@ -251,7 +250,6 @@ async def serve_frontend(request: Request, full_path: str):
 if __name__ == "__main__":
     import uvicorn
     
-    # Determine which port based on deployment environment
     port = settings.TENANT_PORT  # Default
     if settings.DEPLOYMENT_ENV == "landlord":
         port = settings.LANDLORD_PORT
