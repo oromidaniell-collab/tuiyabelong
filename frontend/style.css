@@ -1,12 +1,4 @@
-/* =========================================================
-   RMS — Main Stylesheet
-   Design: Clean, professional, no glassmorphism.
-   Font: Inter (system-quality readability)
-   ========================================================= */
-
-/* --- Tokens -------------------------------------------- */
 :root {
-    /* Argentina-jersey inspired blues */
     --accent:       #0d47a1;
     --accent-dark:  #05306b;
     --success:      #16a34a;
@@ -16,7 +8,7 @@
     --bg-main:      #f5f7fa;
     --bg-sidebar:   #ffffff;
     --bg-card:      #ffffff;
-    --auth-bg:      #0b2a5a;  /* Fallback background for login */
+    --auth-bg:      #0b2a5a;  
 
 
     --text-main:    #0f172a;
@@ -64,13 +56,6 @@ body {
     transition: background-color 0.2s, color 0.2s;
 }
 
-/* =========================================================
-   AUTH PAGES — Login & Register
-   Premium animated design with gradient bg, glassmorphism,
-   floating particles, and typewriter text.
-   ========================================================= */
-
-/* --- Simple, secure login background (image + overlay) --- */
 .auth-page {
     display: flex;
     justify-content: center;
@@ -97,7 +82,7 @@ body {
     overflow: hidden;
 }
 
-/* Dark overlay for readability */
+
 .auth-page::before {
     content: '';
     position: absolute;
@@ -107,26 +92,27 @@ body {
 }
 
 
-/* --- Glassmorphic card --- */
 .auth-container {
     width: 90%;
     max-width: 400px;
     margin: auto;
-    /* Card background: slightly more opaque so bg isn't too blurred */
-    background: rgba(255, 255, 255, 0.86);
-    border: 1px solid rgba(226, 232, 240, 1);
-    backdrop-filter: blur(1px);
+
+    /* Allow the background image to be visible behind the card */
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    border: 1px solid rgba(226, 232, 240, 0.9);
     border-radius: 16px;
     padding: 2.5rem 2rem;
     box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.3),
         0 0 80px rgba(37, 99, 235, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
     position: relative;
     z-index: 1;
 }
 
-/* Status Messages */
 .status-message {
     padding: 0.75rem;
     border-radius: 12px;
