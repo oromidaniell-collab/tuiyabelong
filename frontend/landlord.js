@@ -1,16 +1,11 @@
-// landlord portal
-// This JavaScript file manages the landlord dashboard, including data fetching, view management, and user interactions for landlords.
 
-// API Base URL configuration for backend access
 const API_BASE_URL = (() => {
     const hostname = window.location.hostname;
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
     
     if (isLocalhost) {
-        // In local development, use port 8001 for landlord backend
         return `http://${hostname}:8001`;
     } else {
-        // In production, use same origin
         return window.location.origin;
     }
 })();
@@ -129,7 +124,6 @@ async function loadTenants() {
                 <td>
                     <button onclick="viewTenantDetails(${tenant.id})" class="icon-btn" title="View Details"><i class="fas fa-eye"></i></button>
                     <button onclick="sendMessageToTenant(${tenant.id})" class="icon-btn" title="Send Message"><i class="fas fa-envelope"></i></button>
-                    <button onclick="deleteTenantAccount(${tenant.id}, '${escapeHtml(tenant.name)}')" class="icon-btn text-danger" title="Delete Account"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>
         `).join('');
@@ -309,8 +303,43 @@ Last Payment: ${tenant.last_payment_date ? new Date(tenant.last_payment_date).to
 }
 
 function sendMessageToTenant(id) {
-    alert(`Send message to tenant - Coming soon!`);
+    const tenantName = prompt('Tenant name (optional):', '');
+    const subject = prompt('Subject:', `Hello ${tenantName || 'Tenant'}`);
+    if (subject === null) return;
+    const body = prompt('Message:', '');
+    if (body === null) return;
+
+    const token = localStorage.getItem('rms-landlord-token');
+    if (!token) {
+        alert('Not authenticated. Please login again.');
+        return;
+    }
+
+    fetch(`${API_BASE_URL}/api/v1/messages/`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            recipient_id: id,
+            subject: subject.trim(),
+            body: body.trim()
+        })
+    })
+        .then(async (res) => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.detail || 'Failed to send message');
+            }
+            alert('Message sent successfully!');
+        })
+        .catch((err) => {
+            console.error('Send message error:', err);
+            alert(err.message || 'Failed to send message');
+        });
 }
+
 
 async function updateRequestStatus(requestId, status) {
     const token = localStorage.getItem('rms-landlord-token');
