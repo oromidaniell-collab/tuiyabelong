@@ -112,8 +112,10 @@ body {
     width: 90%;
     max-width: 400px;
     margin: auto;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    /* Card background: slightly more opaque so bg isn't too blurred */
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(226, 232, 240, 1);
+    backdrop-filter: blur(1px);
     border-radius: 16px;
     padding: 2.5rem 2rem;
     box-shadow:
