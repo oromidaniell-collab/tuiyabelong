@@ -285,7 +285,7 @@
             const password = document.getElementById('admin-password').value;
             const accessKey = sessionStorage.getItem('temp-access-key');
             const errEl = document.getElementById('pass-error');
-            const btn = document.querySelector('#step-2 .btn-primary');
+            const btn = document.querySelector('#step-2 .auth-btn');
 
             if (!password) {
                 errEl.textContent = ' Password is required.';

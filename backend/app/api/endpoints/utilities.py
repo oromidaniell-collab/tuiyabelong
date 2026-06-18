@@ -92,7 +92,7 @@ async def create_utility_charge(
         amount=charge_in.amount,
         billing_month=charge_in.billing_month,
         notes=charge_in.notes,
-        created_by_user_id=current_user.id,
+        created_by_user_id=current_user.id if current_user.id not in (998, 999) else None,
         status='pending'
     )
     db.add(new_charge)

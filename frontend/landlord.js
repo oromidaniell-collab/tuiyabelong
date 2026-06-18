@@ -256,7 +256,7 @@ function showLandlordView(viewId) {
     if (viewId === 'tenants') loadTenants();
     if (viewId === 'payments') loadPayments();
     if (viewId === 'maintenance') loadMaintenanceRequests();
-    if (viewId === 'utilities') { loadUtilityCharges(); loadUtilityProfitSummary(); }
+    if (viewId === 'utilities') { setDefaultBillingMonth(); loadUtilityCharges(); loadUtilityProfitSummary(); }
     if (viewId === 'messages') loadFeedback();
 }
 
