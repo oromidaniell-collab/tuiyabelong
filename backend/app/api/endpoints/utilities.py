@@ -4,18 +4,15 @@
 # Also provides invoice/statement generation for tenants.
 from fastapi import APIRouter, Depends, status, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, select, desc, and_, case
+from sqlalchemy import func, select, desc, and_
 from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel, Field
 from app.core.database import get_db
 from app.models.users import User
 from app.models.utility import UtilityCharge
-from app.models.unit import Unit
-from app.models.tenant import Tenant
-from app.models.property import Property
-from app.api.endpoints.auth import get_current_user
 from app.api.endpoints.dependencies import get_current_owner
+
 
 router = APIRouter()
 
@@ -238,6 +235,7 @@ async def update_utility_charge(
     charge = result.scalars().first()
     if not charge:
         raise HTTPException(status_code=404, detail="Utility charge not found")
+
     
     if update_in.amount is not None:
         charge.amount = update_in.amount
