@@ -240,7 +240,7 @@ async def serve_frontend(request: Request, full_path: str):
     if os.path.isfile(file_path):
         return FileResponse(file_path)
     
-
+    
     index_path = os.path.join(FRONTEND_DIR, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)

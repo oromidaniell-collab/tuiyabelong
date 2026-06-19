@@ -247,10 +247,10 @@ async def register(request: Request, response: Response, user_in: UserCreate, db
             from app.models.property import Property
             from app.models.unit import Unit
             
+            # Account creation UI does not include room/unit details.
+            # Create Tenant without a unit for now; landlords can assign later.
             unit_id = None
-            if user_in.room_number:
-                # Logic to assign room if provided (simplified for brevity)
-                pass 
+
 
             new_tenant = Tenant(
                 user_id=new_user.id,

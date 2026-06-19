@@ -25,7 +25,7 @@ class Tenant(BaseModel):
     emergency_contact_phone = Column(String(20))
     employer = Column(String(200))
     annual_income = Column(Float)
-    unit_id = Column(Integer, ForeignKey('units.id')) # This field links the tenant to a specific unit they are renting
+    unit_id = Column(Integer, ForeignKey('units.id'), nullable=True)  # allow tenant without unit at signup
     status = Column(String(50), default='active')
     notes = Column(Text)
     

@@ -1,7 +1,3 @@
-# backend/app/api/endpoints/utilities.py
-# API endpoints for water and wifi utility charge management.
-# The landlord/admin enters charges manually: water has units + amount, wifi has amount only.
-# Also provides invoice/statement generation for tenants.
 from fastapi import APIRouter, Depends, status, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select, desc, and_
@@ -15,8 +11,6 @@ from app.api.endpoints.dependencies import get_current_owner
 
 
 router = APIRouter()
-
-# ── Pydantic Schemas ─────────────────────────────────────────
 
 class UtilityChargeCreate(BaseModel):
     utility_type: str  # 'water' or 'wifi'
