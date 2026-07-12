@@ -16,7 +16,7 @@ __pycache__/
 env/
 venv/
 .venv/
-
+.pytest_cache/
 # Distribution
 build/
 dist/
@@ -38,3 +38,4 @@ FIXES_APPLIED.md
 scratch/
 .sixth_sense/
 .sixth/
+test_db.py

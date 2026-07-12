@@ -177,55 +177,50 @@ def is_kenyan_ip(ip: str):
 @router.post("/register", response_model=Token)
 async def register(request: Request, response: Response, user_in: UserCreate, db: AsyncSession = Depends(get_db)):
     from app.core.validators import PasswordValidator, EmailValidator, PhoneValidator
-    
+
     client_ip = get_client_ip(request)
-    
-    # Check rate limit by IP (10 attempts per hour)
+
     if not register_limiter.check_rate_limit(client_ip, limit=10, window=3600):
         raise HTTPException(status_code=429, detail="Too many registration attempts. Please try again in a few minutes.")
 
-    if not is_kenyan_ip("dynamic"): # IP would come from request headers
-         raise HTTPException(status_code=403, detail="Registration is only allowed from Kenya.")
+    if not is_kenyan_ip("dynamic"):
+        raise HTTPException(status_code=403, detail="Registration is only allowed from Kenya.")
 
-    # Validate email format
-    if not EmailValidator.validate(user_in.email):
+    normalized_email = str(user_in.email).strip().lower()
+    if not EmailValidator.validate(normalized_email):
         raise HTTPException(status_code=400, detail="Invalid email format")
 
-    # STRICT DOMAIN WHITELIST
-    allowed_domains = ["gmail.com", "outlook.com", "yahoo.com", "hotmail.com", "icloud.com", "rms.com", "rms.local"]
-    try:
-        domain = user_in.email.split('@')[1].lower()
-        if domain not in allowed_domains:
-            raise HTTPException(status_code=400, detail=f"Email domain '@{domain}' is not allowed. Please use a valid domain (e.g., @gmail.com).")
-    except IndexError:
-        raise HTTPException(status_code=400, detail="Invalid email format")
+    if settings.DEPLOYMENT_ENV.lower() != "development":
+        allowed_domains = ["gmail.com", "outlook.com", "yahoo.com", "hotmail.com", "icloud.com", "rms.com", "rms.local"]
+        try:
+            domain = normalized_email.split('@')[1].lower()
+            if domain not in allowed_domains:
+                raise HTTPException(status_code=400, detail=f"Email domain '@{domain}' is not allowed. Please use a valid domain (e.g., @gmail.com).")
+        except IndexError:
+            raise HTTPException(status_code=400, detail="Invalid email format")
 
     if not user_in.terms_accepted:
         raise HTTPException(status_code=400, detail="You must accept the terms of service")
-    
-    # Validate password strength and length
+
     password_validation = PasswordValidator.validate(user_in.password)
     if not password_validation["valid"]:
         error_msg = " | ".join(password_validation["errors"])
         raise HTTPException(status_code=422, detail=f"Password requirements not met: {error_msg}")
-    
-    # Validate phone number (Kenya)
+
     if not PhoneValidator.validate(user_in.phone):
         raise HTTPException(status_code=400, detail="Invalid phone number. Use Kenya format (e.g., 0712345678 or +254712345678)")
-    
-    logger.info(f"Registering user: {user_in.email}")
+
+    logger.info(f"Registering user: {normalized_email}")
     try:
-        # Check if user already exists
-        result = await db.execute(select(User).filter(User.email == user_in.email))
+        result = await db.execute(select(User).filter(User.email == normalized_email))
         user = result.scalars().first()
         if user:
             raise HTTPException(status_code=409, detail="A user with this email address is already registered.")
-        
-        # Normalize phone number
+
         normalized_phone = PhoneValidator.normalize(user_in.phone)
-        
+
         new_user = User(
-            email=user_in.email,
+            email=normalized_email,
             phone=normalized_phone,
             hashed_password=get_password_hash(user_in.password),
             first_name=user_in.first_name,
@@ -309,11 +304,11 @@ async def login(request: Request, response: Response, form_data: OAuth2PasswordR
         data={"sub": user.email}, expires_delta=access_token_expires
     )
     
-    # Set HttpOnly Cookie with secure settings
+    # Set HttpOnly Cookie with secure settings; allow local development over HTTP
     response.set_cookie(
-        key="access_token", value=f"Bearer {access_token}", 
+        key="access_token", value=f"Bearer {access_token}",
         httponly=True, max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="strict", secure=True
+        samesite="strict", secure=settings.DEPLOYMENT_ENV.lower() != "development"
     )
     
     # Reset rate limit on successful login\n    login_limiter.reset(client_ip)

@@ -1,7 +1,7 @@
 # backend/app/core/database.py
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy.pool import NullPool, QueuePool
+from sqlalchemy.pool import NullPool
 from app.config import settings
 import logging
 from typing import AsyncGenerator
@@ -12,28 +12,28 @@ logger = logging.getLogger(__name__)
 if not settings.ASYNC_DATABASE_URL:
     raise ValueError("DATABASE_URL must be set in Environment Variables")
 
-# On Vercel (Serverless) or when using Supabase Pooler, we MUST use NullPool
 import os
 is_pooler = "pooler.supabase.com" in settings.ASYNC_DATABASE_URL
 pool_class = NullPool if (os.getenv("VERCEL") or is_pooler) else None
 
-# Configure engine arguments dynamically based on pool class
 engine_kwargs = {
     "echo": settings.DB_ECHO,
     "connect_args": {
         "command_timeout": 30,
-        "statement_cache_size": 0,  # Disables prepared statements - required for PgBouncer
-        "prepared_statement_cache_size": 0, # Extra safety for asyncpg + PgBouncer
+        "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0,
         "server_settings": {
             "application_name": "RMS_Vercel"
         },
     }
 }
 
-if pool_class:
+if settings.ASYNC_DATABASE_URL.startswith("sqlite"):
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+    engine_kwargs["poolclass"] = NullPool
+elif pool_class:
     engine_kwargs["poolclass"] = pool_class
 else:
-    # Use default async-compatible pooling
     engine_kwargs.update({
         "pool_size": settings.DB_POOL_SIZE,
         "max_overflow": settings.DB_MAX_OVERFLOW,
