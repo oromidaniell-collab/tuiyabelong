@@ -3,10 +3,17 @@ import os
 from pathlib import Path
 
 from pydantic_settings import BaseSettings
-from pydantic import ValidationError
+from pydantic import ValidationError, Field
 from typing import Optional, List
 import logging
 import sys
+
+
+def _env_or_default(name: str, default: Optional[str] = None) -> Optional[str]:
+    value = os.getenv(name)
+    if value is None or value == "":
+        return default
+    return value
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +43,7 @@ class Settings(BaseSettings):
     ]
 
     # Database
-    DATABASE_URL: Optional[str] = os.getenv("DATABASE_URL")
+    DATABASE_URL: Optional[str] = Field(default_factory=lambda: _env_or_default("DATABASE_URL"))
 
     @property
     def ASYNC_DATABASE_URL(self) -> Optional[str]:
@@ -70,7 +77,7 @@ class Settings(BaseSettings):
     DB_MAX_OVERFLOW: int = 40
 
     # JWT (REQUIRED)
-    SECRET_KEY: str = os.getenv("SECRET_KEY") or "dev-secret-key-change-me"
+    SECRET_KEY: str = Field(default_factory=lambda: _env_or_default("SECRET_KEY", "dev-secret-key-change-me"))
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
@@ -100,7 +107,9 @@ class Settings(BaseSettings):
     DEEPSEEK_API_KEY: Optional[str] = os.getenv("DEEPSEEK_API_KEY")
 
     class Config:
-        env_file = ".env"
+        env_file = None
+        extra = "ignore"
+        case_sensitive = False
 
     def __init__(self, **data):
         super().__init__(**data)

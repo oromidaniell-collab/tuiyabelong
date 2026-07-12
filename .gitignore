@@ -39,3 +39,10 @@ scratch/
 .sixth_sense/
 .sixth/
 test_db.py
+scratch_aiosqlite_api.py
+scratch_aiosqlite_check.py
+scratch_config_check.py
+scratch_db_check.py
+scratch_register_call_local.py
+scratch_register_call.py
+scratch_register_test.py
