@@ -96,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     fetchAdminStats();
-    fetchAINarrative();
     const savedRole = localStorage.getItem('rms-admin-role') || 'owner';
     const select = document.querySelector('.role-selector select');
     if (select) {

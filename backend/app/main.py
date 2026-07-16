@@ -36,6 +36,22 @@ async def lifespan(app: FastAPI):
     
     try:
         if not is_vercel:
+            # Import all models to ensure they are registered with Base.metadata
+            import app.models.users
+            import app.models.property
+            import app.models.unit
+            import app.models.tenant
+            import app.models.lease
+            import app.models.payment
+            import app.models.notification
+            import app.models.maintenance
+            import app.models.document
+            import app.models.interaction
+            import app.models.monitoring
+            import app.models.cache
+            import app.models.utility
+            import app.models.message
+
             # Create database tables - do NOT do this in request path on Vercel
             logger.info("Non-Vercel environment detected. Initializing database tables...")
             async with engine.begin() as conn:
@@ -58,8 +74,6 @@ async def lifespan(app: FastAPI):
         logger.info("Application lifespan startup complete")
     except Exception as e:
         logger.error(f"Error during lifespan startup: {str(e)}", exc_info=True)
-        # In serverless, we might want to continue even if scheduler fails, 
-        # but DB failure might be critical.
     
     yield
     
@@ -139,25 +153,6 @@ async def trigger_reminders():
     from app.tasks.reminders import send_rent_reminders
     await send_rent_reminders()
     return {"status": "reminders_sent", "timestamp": datetime.utcnow().isoformat()}
-
-@app.on_event("startup")
-async def on_startup():
-    logger.info("Initializing database tables...")
-    try:
-        # Import all models that define tables before calling create_all.
-        from app.core.database import engine, Base
-        import app.models.users
-        import app.models.property
-        import app.models.unit
-        import app.models.tenant
-        import app.models.payment
-        import app.models.notification
-        import app.models.utility
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        logger.info("Database tables verified/created.")
-    except Exception as e:
-        logger.error(f"Database initialization failed: {e}")
 
 @app.get("/health")
 async def health_check():

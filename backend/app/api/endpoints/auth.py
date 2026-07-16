@@ -30,21 +30,45 @@ async def get_current_user(db: AsyncSession = Depends(get_db), token: str = Depe
     )
     
     # Fixed/legacy portal tokens for single-owner admin/landlord portals
-    # (Used for local testing and for deployments that skip DB bootstrap.)
     if token in ("admin-local-2026", "landlord-local-2026"):
         if token == "admin-local-2026":
             result = await db.execute(select(User).filter(User.role == UserRole.ADMIN))
             user = result.scalars().first()
             if user:
                 return user
-            return User(id=999, email="admin@rms.local", role=UserRole.ADMIN, first_name="Admin", last_name="Local")
+            # Create admin user in DB if not exists
+            admin_user = User(
+                email="admin@rms.local", role=UserRole.ADMIN,
+                first_name="Admin", last_name="Local",
+                hashed_password=get_password_hash("admin@2026"), phone="0700000000"
+            )
+            db.add(admin_user)
+            try:
+                await db.commit()
+                await db.refresh(admin_user)
+                return admin_user
+            except Exception:
+                await db.rollback()
+                return admin_user
 
         if token == "landlord-local-2026":
             result = await db.execute(select(User).filter(User.role == UserRole.LANDLORD))
             user = result.scalars().first()
             if user:
                 return user
-            return User(id=998, email="landlord@rms.local", role=UserRole.LANDLORD, first_name="Landlord", last_name="Local")
+            landlord_user = User(
+                email="landlord@rms.local", role=UserRole.LANDLORD,
+                first_name="Landlord", last_name="Local",
+                hashed_password=get_password_hash("landlord@2026"), phone="0700000001"
+            )
+            db.add(landlord_user)
+            try:
+                await db.commit()
+                await db.refresh(landlord_user)
+                return landlord_user
+            except Exception:
+                await db.rollback()
+                return landlord_user
 
 
     try:
@@ -63,12 +87,36 @@ async def get_current_user(db: AsyncSession = Depends(get_db), token: str = Depe
         if user is not None:
             return user
 
-    # Portal-login tokens are single-owner; allow fallback by role claim
-    # so endpoints work even if portal users are not present in the database.
+    # Portal-login tokens: create DB user if not found, so endpoints work properly
     if role_claim == "admin":
-        return User(id=999, email="admin@rms.local", role=UserRole.ADMIN, first_name="Admin", last_name="Local")
+        admin_user = User(
+            email="admin@rms.local", role=UserRole.ADMIN,
+            first_name="Admin", last_name="Local",
+            hashed_password=get_password_hash("admin@2026"), phone="0700000000"
+        )
+        db.add(admin_user)
+        try:
+            await db.commit()
+            await db.refresh(admin_user)
+            return admin_user
+        except Exception:
+            await db.rollback()
+            # Fall back to detached object if DB write fails
+            return admin_user
     if role_claim == "landlord":
-        return User(id=998, email="landlord@rms.local", role=UserRole.LANDLORD, first_name="Landlord", last_name="Local")
+        landlord_user = User(
+            email="landlord@rms.local", role=UserRole.LANDLORD,
+            first_name="Landlord", last_name="Local",
+            hashed_password=get_password_hash("landlord@2026"), phone="0700000001"
+        )
+        db.add(landlord_user)
+        try:
+            await db.commit()
+            await db.refresh(landlord_user)
+            return landlord_user
+        except Exception:
+            await db.rollback()
+            return landlord_user
 
     raise credentials_exception
 
@@ -211,76 +259,60 @@ async def register(request: Request, response: Response, user_in: UserCreate, db
         raise HTTPException(status_code=400, detail="Invalid phone number. Use Kenya format (e.g., 0712345678 or +254712345678)")
 
     logger.info(f"Registering user: {normalized_email}")
+
+    result = await db.execute(select(User).filter(User.email == normalized_email))
+    user = result.scalars().first()
+    if user:
+        raise HTTPException(status_code=409, detail="A user with this email address is already registered.")
+
+    normalized_phone = PhoneValidator.normalize(user_in.phone)
+
+    new_user = User(
+        email=normalized_email,
+        phone=normalized_phone,
+        hashed_password=get_password_hash(user_in.password),
+        first_name=user_in.first_name,
+        last_name=user_in.last_name,
+        role=user_in.role
+    )
+    db.add(new_user)
     try:
-        result = await db.execute(select(User).filter(User.email == normalized_email))
-        user = result.scalars().first()
-        if user:
-            raise HTTPException(status_code=409, detail="A user with this email address is already registered.")
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Database error during user creation: {str(e)}")
+        raise HTTPException(status_code=400, detail="Account registration failed. This email or phone number might already be in use.")
 
-        normalized_phone = PhoneValidator.normalize(user_in.phone)
+    await db.refresh(new_user)
 
-        new_user = User(
-            email=normalized_email,
-            phone=normalized_phone,
-            hashed_password=get_password_hash(user_in.password),
-            first_name=user_in.first_name,
-            last_name=user_in.last_name,
-            role=user_in.role
+    # Create corresponding Tenant record
+    if new_user.role == UserRole.TENANT:
+        new_tenant = Tenant(
+            user_id=new_user.id,
+            first_name=new_user.first_name,
+            last_name=new_user.last_name,
+            email=new_user.email,
+            phone=new_user.phone,
+            unit_id=None,
+            status='active'
         )
-        db.add(new_user)
+        db.add(new_tenant)
         try:
             await db.commit()
         except Exception as e:
             await db.rollback()
-            logger.error(f"Database error during user creation: {str(e)}")
-            raise HTTPException(status_code=400, detail="Account registration failed. This email or phone number might already be in use.")
-            
-        await db.refresh(new_user)
-        
-        # Create corresponding Tenant record
-        if new_user.role == UserRole.TENANT:
-            from app.models.property import Property
-            from app.models.unit import Unit
-            
-            # Account creation UI does not include room/unit details.
-            # Create Tenant without a unit for now; landlords can assign later.
-            unit_id = None
+            logger.error(f"Integrity error creating tenant: {str(e)}")
+            logger.warning(f"Tenant record could not be created for {new_user.email}")
 
+    logger.info("Registration completed successfully.")
 
-            new_tenant = Tenant(
-                user_id=new_user.id,
-                first_name=new_user.first_name,
-                last_name=new_user.last_name,
-                email=new_user.email,
-                phone=new_user.phone,
-                unit_id=unit_id,
-                status='active'
-            )
-            db.add(new_tenant)
-            try:
-                await db.commit()
-            except Exception as e:
-                await db.rollback()
-                logger.error(f"Integrity error creating tenant: {str(e)}")
-                # We don't raise here to allow the user record to remain, 
-                # but we should log it. Actually, better to be clean:
-                logger.warning(f"Tenant record could not be created for {new_user.email}")
-        
-        logger.info("Registration completed successfully.")
-        
-        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
-            data={"sub": new_user.email}, expires_delta=access_token_expires
-        )
-        
-        logger.info(f"Registration successful for: {new_user.email}")
-        return {"access_token": access_token, "token_type": "bearer"}
-    except Exception as e:
-        import traceback
-        error_trace = traceback.format_exc()
-        logger.error(f"Registration failed: {str(e)}")
-        logger.error(error_trace)
-        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": new_user.email}, expires_delta=access_token_expires
+    )
+
+    logger.info(f"Registration successful for: {new_user.email}")
+    return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/login", response_model=Token)
 async def login(request: Request, response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
@@ -311,7 +343,8 @@ async def login(request: Request, response: Response, form_data: OAuth2PasswordR
         samesite="strict", secure=settings.DEPLOYMENT_ENV.lower() != "development"
     )
     
-    # Reset rate limit on successful login\n    login_limiter.reset(client_ip)
+    # Reset rate limit on successful login
+    login_limiter.reset(client_ip)
     
     return {"access_token": access_token, "token_type": "bearer"}
 
