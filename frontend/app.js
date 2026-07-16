@@ -79,6 +79,29 @@ async function apiCall(url, options = {}) {
     }
 }
 
+// ── Inactivity Timeout (30 min) ───────────────────────────────
+(function initSessionTimeout() {
+    const TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+    let timer = null;
+
+    function logout() {
+        localStorage.removeItem('rms-token');
+        localStorage.removeItem('rms-user');
+        window.location.href = 'landing.html';
+    }
+
+    function resetTimer() {
+        clearTimeout(timer);
+        timer = setTimeout(logout, TIMEOUT_MS);
+    }
+
+    ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
+        document.addEventListener(evt, resetTimer, { passive: true });
+    });
+
+    resetTimer();
+})();
+
 // Auth Logic
 // Check for developer mode (bypass CAPTCHA)
 const isDevMode = new URLSearchParams(window.location.search).has('dev');
@@ -1032,13 +1055,10 @@ async function uploadProfileImage(event) {
 
 async function loadProfileImage() {
     try {
-        const res = await apiCall('/users/me/photo');
-        if (res.ok) {
-            const data = await res.json();
-            if (data.profile_picture) {
-                const avatar = document.getElementById('profile-avatar');
-                if (avatar) avatar.src = data.profile_picture;
-            }
+        const data = await apiCall('/users/me/photo');
+        if (data && data.profile_picture) {
+            const avatar = document.getElementById('profile-avatar');
+            if (avatar) avatar.src = data.profile_picture;
         }
     } catch (err) {
         console.error('Failed to load profile photo:', err);

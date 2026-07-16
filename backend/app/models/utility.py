@@ -13,8 +13,6 @@ class UtilityType:
 class UtilityCharge(BaseModel):
     __tablename__ = 'utility_charges'
     
-    id = Column(Integer, primary_key=True, index=True)
-    
     # Type: 'water' or 'wifi'
     utility_type = Column(String(20), nullable=False, index=True)
     

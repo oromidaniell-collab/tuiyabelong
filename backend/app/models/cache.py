@@ -9,7 +9,6 @@ class CacheItem(BaseModel):
     key = Column(String(255), primary_key=True, index=True)
     value = Column(Text)
     expires_at = Column(DateTime)
-    created_at = Column(DateTime, default=datetime.utcnow)
 
     def is_expired(self):
         return datetime.utcnow() > self.expires_at

@@ -12,6 +12,29 @@ const API_BASE_URL = (() => {
 
 let revenueChart = null;
 
+// ── Inactivity Timeout (30 min) ───────────────────────────────
+(function initSessionTimeout() {
+    const TIMEOUT_MS = 30 * 60 * 1000;
+    let timer = null;
+
+    function logout() {
+        localStorage.removeItem('rms-landlord-token');
+        localStorage.removeItem('rms-landlord-role');
+        window.location.href = 'landing.html';
+    }
+
+    function resetTimer() {
+        clearTimeout(timer);
+        timer = setTimeout(logout, TIMEOUT_MS);
+    }
+
+    ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
+        document.addEventListener(evt, resetTimer, { passive: true });
+    });
+
+    resetTimer();
+})();
+
     
 async function initLandlordApp() {
     const token = localStorage.getItem('rms-landlord-token');

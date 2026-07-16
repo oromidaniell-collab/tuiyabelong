@@ -13,8 +13,6 @@ class Message(BaseModel):
     subject = Column(String(255), nullable=False)
     body = Column(Text, nullable=False)
     is_read = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     sender = relationship("User", foreign_keys=[sender_id], back_populates="sent_messages")

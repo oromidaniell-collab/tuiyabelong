@@ -7,24 +7,20 @@ from .base import BaseModel
 class Feedback(BaseModel):
     __tablename__ = 'feedbacks'
     
-    id = Column(Integer, primary_key=True, index=True)
     tenant_id = Column(Integer, ForeignKey('tenants.id'))
     subject = Column(String(255), nullable=False)
     message = Column(Text, nullable=False)
     status = Column(String(50), default='open') # open, in_progress, resolved
-    created_at = Column(DateTime, default=datetime.utcnow)
     
     tenant = relationship("Tenant")
 
 class Review(BaseModel):
     __tablename__ = 'reviews'
     
-    id = Column(Integer, primary_key=True, index=True)
     tenant_id = Column(Integer, ForeignKey('tenants.id'))
     property_id = Column(Integer, ForeignKey('properties.id'))
     rating = Column(Float, nullable=False)
     comment = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
     
     tenant = relationship("Tenant")
     property = relationship("Property")

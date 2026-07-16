@@ -1,3 +1,26 @@
+// ── Inactivity Timeout (30 min) ───────────────────────────────
+(function initSessionTimeout() {
+    const TIMEOUT_MS = 30 * 60 * 1000;
+    let timer = null;
+
+    function logout() {
+        localStorage.removeItem('rms-admin-token');
+        localStorage.removeItem('rms-admin-role');
+        window.location.href = 'landing.html';
+    }
+
+    function resetTimer() {
+        clearTimeout(timer);
+        timer = setTimeout(logout, TIMEOUT_MS);
+    }
+
+    ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
+        document.addEventListener(evt, resetTimer, { passive: true });
+    });
+
+    resetTimer();
+})();
+
 // Role Management
 let currentRole = 'owner';
 

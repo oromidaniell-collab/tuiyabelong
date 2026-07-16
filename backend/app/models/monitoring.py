@@ -6,7 +6,6 @@ from .base import BaseModel
 class SystemMetric(BaseModel):
     __tablename__ = 'system_metrics'
     
-    id = Column(Integer, primary_key=True, index=True)
     metric_name = Column(String(100), index=True)
     value = Column(Float)
     details = Column(Text)
@@ -15,7 +14,6 @@ class SystemMetric(BaseModel):
 class LogEntry(BaseModel):
     __tablename__ = 'log_entries'
     
-    id = Column(Integer, primary_key=True, index=True)
     level = Column(String(20)) # INFO, ERROR, WARN
     module = Column(String(100))
     message = Column(Text)

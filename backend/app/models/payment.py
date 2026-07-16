@@ -23,7 +23,6 @@ class PaymentMethod(str):
 class Payment(BaseModel):
     __tablename__ = 'payments'
     
-    id = Column(Integer, primary_key=True, index=True)
     tenant_id = Column(Integer, ForeignKey('tenants.id'))
     lease_id = Column(Integer, ForeignKey('leases.id'))
     amount = Column(Float, nullable=False)

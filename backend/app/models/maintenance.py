@@ -13,7 +13,6 @@ class MaintenanceRequest(BaseModel):
     description = Column(Text, nullable=False)
     status = Column(String(50), default='pending')  # pending, in_progress, completed, cancelled
     priority = Column(String(50), default='medium')  # low, medium, high, emergency
-    created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
     tenant = relationship("Tenant", back_populates="maintenance_requests")

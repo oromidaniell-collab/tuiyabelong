@@ -14,7 +14,6 @@ class Notification(BaseModel):
     message = Column(Text, nullable=False)
     is_read = Column(Boolean, default=False)
     type = Column(String(50))  # info, warning, payment, maintenance
-    created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
     user = relationship("User", back_populates="notifications")
