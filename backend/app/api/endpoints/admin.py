@@ -550,10 +550,6 @@ async def delete_tenant(
         raise HTTPException(status_code=400, detail="Only tenant accounts can be deleted from here")
 
     # 2. Delete Tenant record first (if exists)
-    await db.execute(
-        f"DELETE FROM tenants WHERE user_id = {user_id}"
-    ) # Using raw or select then delete for speed here, but SQLAlchemy delete is safer
-    
     from sqlalchemy import delete
     await db.execute(delete(Tenant).where(Tenant.user_id == user_id))
     

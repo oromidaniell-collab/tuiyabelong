@@ -66,7 +66,15 @@ async def create_notification(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Create a notification (admin/landlord can broadcast)"""
+    """Create a notification (admin/landlord only for broadcast or targeting others)"""
+    # Only admin/landlord can broadcast or create notifications for other users
+    if notification_in.broadcast or notification_in.target_user_id:
+        if current_user.role not in (UserRole.ADMIN, UserRole.LANDLORD):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only admin or landlord can broadcast notifications or send to specific users"
+            )
+
     # If broadcast, create for all users (or tenants)
     if notification_in.broadcast:
         result = await db.execute(select(User).where(User.role == UserRole.TENANT))

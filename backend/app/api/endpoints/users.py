@@ -5,46 +5,62 @@ from app.api.endpoints.auth import get_current_user
 from app.core.database import get_db
 from app.models.users import User
 from app.models.tenant import Tenant
-import os
-import base64
-from datetime import datetime
-import uuid
+from pydantic import BaseModel
 
 router = APIRouter()
 
-UPLOAD_DIR = "static/uploads/profiles"
-# Only create directory if NOT on Vercel (read-only FS)
-if not os.environ.get("VERCEL"):
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
+class PhotoUpload(BaseModel):
+    photo_data: str
 
 @router.post("/profile-photo")
 async def upload_profile_photo(
-    photo_data: str = File(...),
+    body: PhotoUpload,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    try:
-        # Decode base64 image
-        if photo_data.startswith('data:image'):
-            photo_data = photo_data.split(',')[1]
-        img_data = base64.b64decode(photo_data)
-        
-        # Generate unique filename
-        filename = f"{current_user.id}_{uuid.uuid4().hex[:8]}.jpg"
-        filepath = os.path.join(UPLOAD_DIR, filename)
-        
-        # Save file
-        with open(filepath, 'wb') as f:
-            f.write(img_data)
-        
-        # Update user
-        await db.execute(
-            update(User)
-            .where(User.id == current_user.id)
-            .values(profile_picture=f"/static/uploads/profiles/{filename}")
-        )
-        await db.commit()
-        
-        return {"profile_picture": f"/static/uploads/profiles/{filename}"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Upload failed")
+    """Store profile photo as base64 data URL in the database (Vercel-compatible)"""
+    photo_data = body.photo_data.strip()
+    
+    # Validate it's a data URL
+    if not photo_data.startswith("data:image"):
+        raise HTTPException(status_code=400, detail="Invalid image data format")
+    
+    # Limit size: base64 string ~133% of binary, so 2MB binary ~2.7MB string
+    if len(photo_data) > 3_000_000:
+        raise HTTPException(status_code=400, detail="Image too large (max 2MB)")
+    
+    # Store directly in the database
+    await db.execute(
+        update(User)
+        .where(User.id == current_user.id)
+        .values(profile_picture=photo_data)
+    )
+    await db.commit()
+    
+    return {"profile_picture": photo_data}
+
+@router.get("/me/photo")
+async def get_profile_photo(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get current user's profile photo data URL"""
+    result = await db.execute(
+        select(User.profile_picture).where(User.id == current_user.id)
+    )
+    row = result.scalar_one_or_none()
+    return {"profile_picture": row}
+
+@router.delete("/me/photo")
+async def delete_profile_photo(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Remove current user's profile photo"""
+    await db.execute(
+        update(User)
+        .where(User.id == current_user.id)
+        .values(profile_picture=None)
+    )
+    await db.commit()
+    return {"message": "Profile photo removed"}

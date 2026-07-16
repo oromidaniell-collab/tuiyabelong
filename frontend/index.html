@@ -452,7 +452,65 @@
         </div>
     </div>
 
-    <script src="app.js?v=1.3"></script>
+    <!-- QR Code Payment Modal -->
+    <div id="qr-modal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width:420px;">
+            <span class="close" onclick="closeQRModal()">&times;</span>
+            <div class="qr-payment">
+                <div class="qr-header">
+                    <i class="fas fa-qrcode"></i>
+                    <h3>Pay with M-Pesa</h3>
+                </div>
+
+                <div class="qr-details">
+                    <div class="qr-detail-row">
+                        <span class="qr-label">Paybill</span>
+                        <span class="qr-value" id="qr-paybill">400200</span>
+                    </div>
+                    <div class="qr-detail-row">
+                        <span class="qr-label">Account</span>
+                        <span class="qr-value" id="qr-account">1106694</span>
+                    </div>
+                    <div class="qr-detail-row">
+                        <span class="qr-label">Business</span>
+                        <span class="qr-value" id="qr-business">TUIYA BELONG</span>
+                    </div>
+                </div>
+
+                <div class="qr-amount-row">
+                    <label>Amount (KES)</label>
+                    <input type="number" id="qr-amount" placeholder="e.g. 15000" min="1" oninput="refreshQRCode()">
+                </div>
+
+                <div id="qr-code-container" class="qr-code-container"></div>
+
+                <div class="qr-instructions">
+                    <p><strong>How to pay:</strong></p>
+                    <ol>
+                        <li>Open <strong>M-Pesa</strong> on your phone</li>
+                        <li>Tap <strong>Lipa na M-Pesa</strong> &rarr; <strong>Pay Bill</strong></li>
+                        <li>Enter Paybill <strong>400200</strong></li>
+                        <li>Enter Account <strong>1106694</strong></li>
+                        <li>Enter amount, confirm, then enter PIN</li>
+                        <li>Copy the confirmation code below</li>
+                    </ol>
+                </div>
+
+                <div class="qr-verify">
+                    <p>Already paid? Enter confirmation code:</p>
+                    <div class="manual-mpesa" style="margin:0;">
+                        <input type="text" id="qr-mpesa-code" placeholder="e.g. QK82L9X1F2" maxlength="10">
+                        <button onclick="submitQRPayment()" class="btn-primary">Verify</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+
+    <script src="app.js?v=1.4"></script>
     <script>
         // Inline captcha init - runs immediately, does not wait for app.js cold-start.
         document.addEventListener('DOMContentLoaded', function() {

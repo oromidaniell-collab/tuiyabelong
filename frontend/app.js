@@ -809,15 +809,155 @@ async function openMessage(messageId) {
 
 // Payment Methods
 function payViaMpesa() {
-    alert('M-Pesa Payment\n\nPaybill: 123456\nAccount: Your phone number\nAmount: Monthly rent amount\n\nWe will confirm your payment within 24 hours.');
+    showQRCode();
 }
 
 function payViaCard() {
     alert('Card payment integration - Coming soon!');
 }
 
+// M-Pesa QR code — EMVCo format for Paybill 400200 / Account 1106694
+function buildMpesaQRData(amount) {
+    // Helper: TLV tag (tag number, value string)
+    function tlv(tag, val) {
+        return tag.toString().padStart(2, '0')
+             + val.length.toString().padStart(2, '0')
+             + val;
+    }
+
+    // Tag 00: Payload Format Indicator = "01"
+    const tag00 = tlv('00', '01');
+
+    // Tag 01: Point of Initiation Method (12 = dynamic with amount, 11 = static)
+    const tag01 = tlv('01', amount ? '12' : '11');
+
+    // Tag 30: Merchant Account Information
+    //   Sub 00: M-Pesa GUID
+    //   Sub 01: Business / Paybill number
+    //   Sub 02: Account number
+    const guid    = 'SKMP00000000000000000000000000000000000000000000';
+    const bizNo   = '400200';
+    const acctNo  = '1106694';
+    const mInfo   = tlv('00', guid) + tlv('01', bizNo) + tlv('02', acctNo);
+    const tag30   = tlv('30', mInfo);
+
+    // Tag 52: Merchant Category Code
+    const tag52 = tlv('52', '0000');
+
+    // Tag 53: Transaction Currency — 682 = KES (ISO 4217)
+    const tag53 = tlv('53', '682');
+
+    // Tag 54: Transaction Amount (omit if no amount yet)
+    const tag54 = amount ? tlv('54', amount.toString()) : '';
+
+    // Tag 58: Country Code
+    const tag58 = tlv('58', 'KE');
+
+    // Tag 59: Merchant Name
+    const tag59 = tlv('59', 'TUIYA BELONG');
+
+    // Tag 60: Merchant City
+    const tag60 = tlv('60', 'NAIROBI');
+
+    // Tag 61: Postal Code
+    const tag61 = tlv('61', '0000');
+
+    // Tag 62: Additional Data (empty)
+    const tag62 = tlv('62', '0000');
+
+    // Build string up to CRC placeholder
+    const payload = tag00 + tag01 + tag30 + tag52 + tag53 + tag54 + tag58 + tag59 + tag60 + tag61 + tag62;
+
+    // Tag 63: CRC-16 (CCITT-FALSE, poly 0x1021, init 0xFFFF)
+    const crcInput = payload + '6304';
+    const crc = crc16CCITT(crcInput);
+    const crcHex = crc.toString(16).toUpperCase().padStart(4, '0');
+
+    return payload + tlv('63', crcHex);
+}
+
+function crc16CCITT(str) {
+    let crc = 0xFFFF;
+    for (let i = 0; i < str.length; i++) {
+        crc ^= str.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) {
+            if (crc & 0x8000) {
+                crc = (crc << 1) ^ 0x1021;
+            } else {
+                crc <<= 1;
+            }
+            crc &= 0xFFFF;
+        }
+    }
+    return crc;
+}
+
+function refreshQRCode() {
+    const container = document.getElementById('qr-code-container');
+    if (!container) return;
+    const amount = document.getElementById('qr-amount').value;
+
+    container.innerHTML = '';
+
+    if (typeof qrcode === 'undefined') {
+        container.innerHTML = '<p style="color:var(--text-muted);font-size:0.8rem;">QR library loading&hellip;</p>';
+        return;
+    }
+
+    const data = buildMpesaQRData(amount || null);
+    const qr = qrcode(0, 'M');
+    qr.addData(data);
+    qr.make();
+    container.innerHTML = qr.createSvgTag(5, 0);
+}
+
 function showQRCode() {
-    alert('Scan QR code at the rental office to make payment.');
+    const modal = document.getElementById('qr-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        refreshQRCode();
+    }
+}
+
+function closeQRModal() {
+    const modal = document.getElementById('qr-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function submitQRPayment() {
+    const code = document.getElementById('qr-mpesa-code').value.trim();
+    if (code.length < 8) {
+        alert('Please enter a valid M-Pesa confirmation code.');
+        return;
+    }
+
+    const token = localStorage.getItem('rms-token');
+    if (!token) { window.location.href = 'register.html'; return; }
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/payments/verify-mpesa`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ transaction_code: code })
+        });
+
+        if (res.ok) {
+            alert('Payment recorded successfully! It will be confirmed shortly.');
+            document.getElementById('qr-mpesa-code').value = '';
+            closeQRModal();
+            if (typeof loadPaymentHistory === 'function') loadPaymentHistory();
+            if (typeof loadDashboardData === 'function') loadDashboardData();
+        } else {
+            const err = await res.json().catch(() => ({}));
+            alert(err.detail || 'Payment verification failed. Please try again.');
+        }
+    } catch (err) {
+        console.error('QR payment error:', err);
+        alert('Network error. Please try again.');
+    }
 }
 
 async function submitMpesaCode() {
@@ -853,36 +993,56 @@ async function submitMpesaCode() {
 }
 
 // Profile Management
-function uploadProfileImage(event) {
+async function uploadProfileImage(event) {
     const file = event.target.files[0];
-    if (file) {
-        if (file.size > 2 * 1024 * 1024) {
-            alert('File size must be less than 2MB');
-            return;
-        }
-        
-        if (!file.type.startsWith('image/')) {
-            alert('Please upload an image file');
-            return;
-        }
+    if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const avatar = document.getElementById('profile-avatar');
-            if (avatar) {
-                avatar.src = e.target.result;
-                localStorage.setItem('rms-profile-image', e.target.result);
-            }
-        };
-        reader.readAsDataURL(file);
+    if (file.size > 2 * 1024 * 1024) {
+        alert('File size must be less than 2MB');
+        return;
     }
+    
+    if (!file.type.startsWith('image/')) {
+        alert('Please upload an image file');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const dataUrl = e.target.result;
+        
+        // Update UI immediately
+        const avatar = document.getElementById('profile-avatar');
+        if (avatar) avatar.src = dataUrl;
+        
+        // Save to backend
+        try {
+            const res = await apiCall('/users/profile-photo', {
+                method: 'POST',
+                body: JSON.stringify({ photo_data: dataUrl })
+            });
+            if (res.ok) {
+                showToast('Profile photo updated', 'success');
+            }
+        } catch (err) {
+            console.error('Failed to save photo to backend:', err);
+        }
+    };
+    reader.readAsDataURL(file);
 }
 
-function loadProfileImage() {
-    const savedImage = localStorage.getItem('rms-profile-image');
-    if (savedImage) {
-        const avatar = document.getElementById('profile-avatar');
-        if (avatar) avatar.src = savedImage;
+async function loadProfileImage() {
+    try {
+        const res = await apiCall('/users/me/photo');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.profile_picture) {
+                const avatar = document.getElementById('profile-avatar');
+                if (avatar) avatar.src = data.profile_picture;
+            }
+        }
+    } catch (err) {
+        console.error('Failed to load profile photo:', err);
     }
 }
 

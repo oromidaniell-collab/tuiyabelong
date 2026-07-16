@@ -97,18 +97,11 @@ body {
     max-width: 400px;
     margin: auto;
 
-    /* Allow the background image to be visible behind the card */
-    background: rgba(255, 255, 255, 0.72);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-
-    border: 1px solid rgba(226, 232, 240, 0.9);
-    border-radius: 16px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
     padding: 2.5rem 2rem;
-    box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        0 0 80px rgba(37, 99, 235, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     position: relative;
     z-index: 1;
 }
@@ -251,13 +244,11 @@ body {
 }
 
 .auth-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    background: var(--accent-dark);
 }
 
 .auth-btn:active {
-    transform: translateY(0);
-    box-shadow: var(--shadow-sm);
+    background: var(--accent-dark);
 }
 
 /* --- Footer links --- */
@@ -319,7 +310,6 @@ body {
     justify-content: center;
     font-size: 1.6rem;
     margin-bottom: 1rem;
-    box-shadow: 0 0 30px rgba(22, 163, 74, 0.2);
 }
 
 .success-panel h3 {
@@ -897,6 +887,156 @@ label { cursor: pointer; color: var(--text-main); display: flex; align-items: ce
 .profile-info p { margin-bottom: 0.35rem; font-size: 0.82rem; }
 
 /* =========================================================
+   QR CODE PAYMENT
+   ========================================================= */
+
+.qr-payment {
+    text-align: center;
+}
+
+.qr-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-bottom: 1.25rem;
+}
+
+.qr-header i {
+    font-size: 1.4rem;
+    color: var(--accent);
+}
+
+.qr-header h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.qr-details {
+    background: var(--bg-main);
+    border-radius: var(--radius-sm);
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+}
+
+.qr-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.35rem 0;
+}
+
+.qr-detail-row + .qr-detail-row {
+    border-top: 1px solid var(--border);
+}
+
+.qr-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.qr-value {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: 0.03em;
+}
+
+.qr-amount-row {
+    margin-bottom: 1.25rem;
+    text-align: left;
+}
+
+.qr-amount-row label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.qr-amount-row input {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-main);
+    color: var(--text-main);
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.qr-amount-row input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+.qr-code-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 1rem 0;
+    min-height: 180px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+}
+
+.qr-code-container img,
+.qr-code-container canvas,
+.qr-code-container table {
+    display: block;
+    margin: 0 auto;
+}
+
+.qr-instructions {
+    background: var(--bg-main);
+    border-radius: var(--radius-sm);
+    padding: 0.85rem 1rem;
+    margin: 1rem 0;
+    text-align: left;
+    border: 1px solid var(--border);
+}
+
+.qr-instructions p {
+    font-size: 0.8rem;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+}
+
+.qr-instructions ol {
+    margin: 0;
+    padding-left: 1.2rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+}
+
+.qr-instructions ol li strong {
+    color: var(--text-main);
+}
+
+.qr-verify {
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+}
+
+.qr-verify p {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+/* =========================================================
    MISC
    ========================================================= */
 
@@ -1285,12 +1425,10 @@ body.no-select { user-select: none; }
 
 .message-button:hover {
     background: var(--accent-dark);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
 }
 
 .message-button:active {
-    transform: translateY(0);
+    background: var(--accent-dark);
 }
 
 /* Broadcast Message (Landlord) */
