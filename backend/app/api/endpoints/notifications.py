@@ -8,7 +8,7 @@ from app.models.notification import Notification
 from app.api.endpoints.auth import get_current_user
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 router = APIRouter()
 
@@ -17,8 +17,8 @@ class NotificationResponse(BaseModel):
     title: str
     message: str
     is_read: bool
-    created_at: datetime
-    notification_type: str = None
+    created_at: Optional[datetime] = None
+    notification_type: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -28,10 +28,10 @@ class NotificationResponse(BaseModel):
         return cls(
             id=n.id,
             title=n.title,
-            message=n.message,
-            is_read=n.is_read,
+            message=n.message or "",
+            is_read=bool(n.is_read),
             created_at=n.created_at,
-            notification_type=n.type
+            notification_type=getattr(n, 'type', None)
         )
 
 class NotificationCreate(BaseModel):

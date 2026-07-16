@@ -18,6 +18,27 @@ from pydantic import BaseModel, Field
 
 router = APIRouter()
 
+# ── Public (no auth) ────────────────────────────────────────────
+@router.get("/public-stats")
+async def get_public_stats(db: AsyncSession = Depends(get_db)):
+    """Public stats for the landing page — no auth required"""
+    try:
+        result = await db.execute(select(func.count(User.id)).where(User.role == UserRole.TENANT))
+        tenants = result.scalar() or 0
+
+        result = await db.execute(select(func.count(Property.id)))
+        properties = result.scalar() or 0
+
+        result = await db.execute(select(func.count(Payment.id)).where(Payment.status == 'paid'))
+        payments = result.scalar() or 0
+
+        result = await db.execute(select(func.coalesce(func.sum(Payment.amount), 0)).where(Payment.status == 'paid'))
+        revenue = float(result.scalar() or 0)
+
+        return {"properties": properties, "tenants": tenants, "payments": payments, "revenue": revenue}
+    except Exception:
+        return {"properties": 0, "tenants": 0, "payments": 0, "revenue": 0}
+
 # Response Models
 class SystemStatsResponse(BaseModel):
     total_revenue: str
@@ -139,8 +160,10 @@ async def get_dashboard_metrics(
 ):
     """Get key dashboard metrics"""
     
-    # Count total tenants from Tenant model (active tenant records)
-    result = await db.execute(select(func.count(Tenant.id)))
+    # Count total tenants — users with TENANT role (matches the tenant list endpoint)
+    result = await db.execute(
+        select(func.count(User.id)).where(User.role == UserRole.TENANT)
+    )
     total_tenants = result.scalar() or 0
     
     # Count total properties

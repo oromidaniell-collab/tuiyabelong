@@ -309,7 +309,6 @@ function checkAuth() {
     } else {
         if (authCheck) authCheck.style.display = 'none';
         if (loginScreen) loginScreen.style.display = 'block';
-        // Generate CAPTCHA immediately when login screen is shown
         generateCaptcha();
         const emailInput = document.getElementById('login-email');
         if (emailInput) emailInput.focus();

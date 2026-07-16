@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuiya Belong | Smart Rental Management</title>
+    <link rel="stylesheet" href="style.css?v=2.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #E8ECF1; }
+
+        /* ── Hero ────────────────────────────────────────── */
+        .hero {
+            background: linear-gradient(135deg, #16213E 0%, #1a3a5c 50%, #16213E 100%);
+            padding: 5rem 1.5rem 4rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -60%;
+            right: -20%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(117,170,219,0.12) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -40%;
+            left: -15%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(117,170,219,0.08) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .hero-content { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.35rem 1rem;
+            background: rgba(117,170,219,0.15);
+            border: 1px solid rgba(117,170,219,0.25);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #75AADB;
+            letter-spacing: 0.04em;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-size: 2.6rem;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.15;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 span { color: #75AADB; }
+
+        .hero p {
+            font-size: 1.05rem;
+            color: rgba(255,255,255,0.55);
+            max-width: 520px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hero-btn {
+            padding: 0.75rem 1.75rem;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .hero-btn-primary {
+            background: #75AADB;
+            color: #16213E;
+        }
+
+        .hero-btn-primary:hover {
+            background: #8FBDE8;
+        }
+
+        .hero-btn-secondary {
+            background: rgba(255,255,255,0.08);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .hero-btn-secondary:hover {
+            background: rgba(255,255,255,0.14);
+        }
+
+        /* ── Stats Bar ──────────────────────────────────── */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            padding: 2rem 1.5rem;
+            background: #ffffff;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .stat-item { text-align: center; }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #16213E;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #64748B;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.15rem;
+        }
+
+        /* ── Features ───────────────────────────────────── */
+        .section { padding: 4rem 1.5rem; }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #16213E;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            font-size: 0.92rem;
+            color: #64748B;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: #ffffff;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .feature-card:hover {
+            border-color: #75AADB;
+            box-shadow: 0 2px 12px rgba(117,170,219,0.1);
+        }
+
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-icon.blue { background: #EFF6FF; color: #75AADB; }
+        .feature-icon.green { background: #F0FDF4; color: #16A34A; }
+        .feature-icon.navy { background: #F1F5F9; color: #16213E; }
+        .feature-icon.amber { background: #FFFBEB; color: #D97706; }
+
+        .feature-card h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #16213E;
+            margin-bottom: 0.4rem;
+        }
+
+        .feature-card p {
+            font-size: 0.82rem;
+            color: #64748B;
+            line-height: 1.55;
+        }
+
+        /* ── How It Works ───────────────────────────────── */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .step-card {
+            text-align: center;
+            padding: 1.5rem 1rem;
+        }
+
+        .step-number {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #16213E;
+            color: #75AADB;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .step-card h3 {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: #16213E;
+            margin-bottom: 0.35rem;
+        }
+
+        .step-card p {
+            font-size: 0.8rem;
+            color: #64748B;
+            line-height: 1.5;
+        }
+
+        /* ── Portals ────────────────────────────────────── */
+        .portals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .portal-card {
+            background: #ffffff;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .portal-card:hover {
+            border-color: #75AADB;
+        }
+
+        .portal-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            background: #EFF6FF;
+            color: #75AADB;
+        }
+
+        .portal-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #16213E;
+            margin-bottom: 0.35rem;
+        }
+
+        .portal-card p {
+            font-size: 0.8rem;
+            color: #64748B;
+            margin-bottom: 1.25rem;
+            line-height: 1.5;
+        }
+
+        .portal-link {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .portal-link-primary {
+            background: #75AADB;
+            color: #16213E;
+        }
+
+        .portal-link-primary:hover { background: #8FBDE8; }
+
+        .portal-link-outline {
+            background: transparent;
+            color: #75AADB;
+            border: 1px solid #75AADB;
+        }
+
+        .portal-link-outline:hover { background: #EFF6FF; }
+
+        /* ── CTA ────────────────────────────────────────── */
+        .cta-section {
+            background: #16213E;
+            padding: 3.5rem 1.5rem;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .cta-section p {
+            font-size: 0.88rem;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 1.5rem;
+        }
+
+        /* ── Footer ─────────────────────────────────────── */
+        .landing-footer {
+            background: #0F172A;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.3);
+        }
+
+        .landing-footer a { color: #75AADB; text-decoration: none; }
+
+        /* ── Responsive ─────────────────────────────────── */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 1.8rem; }
+            .hero p { font-size: 0.92rem; }
+            .stats-bar { gap: 1.5rem; flex-wrap: wrap; }
+            .stat-number { font-size: 1.2rem; }
+            .features-grid { grid-template-columns: 1fr; }
+            .steps-grid { grid-template-columns: 1fr; }
+            .portals-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ════════════════════════════════════════════════
+         HERO
+         ════════════════════════════════════════════════ -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">Smart Rental Management</div>
+            <h1>Manage Your Property<br>With <span>Tuiya Belong</span></h1>
+            <p>A modern platform for tenants, landlords, and property managers. Pay rent, track maintenance, and manage everything in one place.</p>
+            <div class="hero-actions">
+                <a href="register.html" class="hero-btn hero-btn-primary">
+                    <i class="fas fa-user-plus"></i> &nbsp;Create Account
+                </a>
+                <a href="#portals" class="hero-btn hero-btn-secondary">
+                    <i class="fas fa-door-open"></i> &nbsp;Portal Login
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════
+         LIVE STATS
+         ════════════════════════════════════════════════ -->
+    <div class="stats-bar" id="live-stats">
+        <div class="stat-item">
+            <div class="stat-number" id="stat-properties">—</div>
+            <div class="stat-label">Properties</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" id="stat-tenants">—</div>
+            <div class="stat-label">Active Tenants</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" id="stat-payments">—</div>
+            <div class="stat-label">Payments Made</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" id="stat-revenue">—</div>
+            <div class="stat-label">Total Collected</div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+         FEATURES
+         ════════════════════════════════════════════════ -->
+    <section class="section">
+        <div class="section-header">
+            <h2>Everything You Need</h2>
+            <p>Powerful tools built for modern property management</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon blue"><i class="fas fa-qrcode"></i></div>
+                <h3>M-Pesa QR Payments</h3>
+                <p>Scan a QR code and pay rent instantly via M-Pesa. No queues, no paperwork.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon green"><i class="fas fa-tools"></i></div>
+                <h3>Maintenance Requests</h3>
+                <p>Report issues, track progress, and get them resolved — all from your phone.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon navy"><i class="fas fa-bell"></i></div>
+                <h3>Smart Notifications</h3>
+                <p>Get real-time alerts for payments, maintenance updates, and important notices.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon amber"><i class="fas fa-file-invoice-dollar"></i></div>
+                <h3>Utility Tracking</h3>
+                <p>Transparent water and wifi billing. Know exactly what you're paying for.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon blue"><i class="fas fa-envelope"></i></div>
+                <h3>Direct Messaging</h3>
+                <p>Communicate directly with your landlord or tenant. No more missed calls.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon green"><i class="fas fa-chart-line"></i></div>
+                <h3>Owner Dashboard</h3>
+                <p>Landlords see revenue, occupancy, arrears, and reports — all in real time.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════
+         HOW IT WORKS
+         ════════════════════════════════════════════════ -->
+    <section class="section" style="background:#ffffff;">
+        <div class="section-header">
+            <h2>How It Works</h2>
+            <p>Three simple steps to get started</p>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3>Create Your Account</h3>
+                <p>Register as a tenant in seconds. Just your name, email, and phone number.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3>Get Assigned</h3>
+                <p>Your landlord assigns you a unit and you're connected to your property.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3>Pay &amp; Manage</h3>
+                <p>Pay rent via M-Pesa QR, submit maintenance requests, and stay updated.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════
+         PORTALS
+         ════════════════════════════════════════════════ -->
+    <section class="section" id="portals">
+        <div class="section-header">
+            <h2>Portal Access</h2>
+            <p>Sign in to the portal that matches your role</p>
+        </div>
+        <div class="portals-grid">
+            <div class="portal-card">
+                <div class="portal-icon"><i class="fas fa-user"></i></div>
+                <h3>Tenant Portal</h3>
+                <p>Pay rent, track maintenance, view documents, and message your landlord.</p>
+                <a href="register.html" class="portal-link portal-link-primary">Sign Up / Login</a>
+            </div>
+            <div class="portal-card">
+                <div class="portal-icon"><i class="fas fa-key"></i></div>
+                <h3>Landlord Portal</h3>
+                <p>Manage tenants, track payments, handle maintenance, and view reports.</p>
+                <a href="landlord-login.html" class="portal-link portal-link-outline">Landlord Login</a>
+            </div>
+            <div class="portal-card">
+                <div class="portal-icon" style="background:#FFF7ED;color:#D97706;"><i class="fas fa-shield-alt"></i></div>
+                <h3>Admin Portal</h3>
+                <p>Full system access. Manage users, properties, payments, and settings.</p>
+                <a href="admin-login.html" class="portal-link portal-link-outline">Admin Login</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════
+         CTA
+         ════════════════════════════════════════════════ -->
+    <section class="cta-section">
+        <h2>Ready to Get Started?</h2>
+        <p>Join Tuiya Belong today and experience smart property management.</p>
+        <a href="register.html" class="hero-btn hero-btn-primary">
+            <i class="fas fa-user-plus"></i> &nbsp;Create Free Account
+        </a>
+    </section>
+
+    <!-- ════════════════════════════════════════════════
+         FOOTER
+         ════════════════════════════════════════════════ -->
+    <footer class="landing-footer">
+        <p>&copy; 2026 Tuiya Belong. All rights reserved. &nbsp;|&nbsp; <a href="policies.html">Privacy Policy</a></p>
+    </footer>
+
+    <!-- ════════════════════════════════════════════════
+         STATS LOADER
+         ════════════════════════════════════════════════ -->
+    <script>
+    (async function() {
+        const API = window.location.origin;
+
+        try {
+            const res = await fetch(`${API}/api/v1/admin/public-stats`);
+            if (!res.ok) throw new Error('no stats');
+            const d = await res.json();
+            document.getElementById('stat-properties').textContent = d.properties || 0;
+            document.getElementById('stat-tenants').textContent   = d.tenants   || 0;
+            document.getElementById('stat-payments').textContent  = d.payments  || 0;
+            document.getElementById('stat-revenue').textContent   = d.revenue   ? `Ksh ${(d.revenue).toLocaleString()}` : 'Ksh 0';
+        } catch(e) {
+            document.getElementById('stat-properties').textContent = '0';
+            document.getElementById('stat-tenants').textContent   = '0';
+            document.getElementById('stat-payments').textContent  = '0';
+            document.getElementById('stat-revenue').textContent   = 'Ksh 0';
+        }
+    })();
+    </script>
+
+</body>
+</html>

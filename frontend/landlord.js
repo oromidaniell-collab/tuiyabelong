@@ -16,7 +16,7 @@ let revenueChart = null;
 async function initLandlordApp() {
     const token = localStorage.getItem('rms-landlord-token');
     if (!token) {
-        window.location.href = 'landlord-login.html';
+        window.location.href = 'landing.html';
         return;
     }
 
@@ -438,11 +438,11 @@ async function submitUtilityCharge(event, utilityType) {
             loadUtilityCharges();
             loadUtilityProfitSummary();
         } else {
-            showToast(data.detail || 'Failed to add charge', 'error');
+            showToast(data.detail || `Error ${res.status}: Failed to add charge`, 'error');
         }
     } catch (err) {
         console.error('Error adding utility charge:', err);
-        showToast('Network error. Please try again.', 'error');
+        showToast('Network error — ' + (err.message || 'Please try again.'), 'error');
     }
 }
 
@@ -749,7 +749,7 @@ async function loadFeedback() {
     if (!container) return;
 
     try {
-        const res = await fetch(`${API_BASE_URL}/api/v1/interaction/feedback`, {
+        const res = await fetch(`${API_BASE_URL}/api/v1/interactions/feedback`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -795,7 +795,7 @@ async function generateReport() {
             const metrics = await res.json();
             
             // Fetch utility summary
-            const utilRes = await fetch(`${API_BASE_URL}/api/v1/utilities/summary`, {
+            const utilRes = await fetch(`${API_BASE_URL}/api/v1/utilities/profit-summary`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const utilSummary = await utilRes.json();
