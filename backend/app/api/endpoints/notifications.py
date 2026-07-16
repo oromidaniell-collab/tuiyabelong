@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from app.core.database import get_db
-from app.models.users import User
+from app.models.users import User, UserRole
 from app.models.notification import Notification
 from app.api.endpoints.auth import get_current_user
 from pydantic import BaseModel
@@ -19,6 +19,20 @@ class NotificationResponse(BaseModel):
     is_read: bool
     created_at: datetime
     notification_type: str = None
+
+    class Config:
+        from_attributes = True
+
+    @classmethod
+    def from_orm_model(cls, n):
+        return cls(
+            id=n.id,
+            title=n.title,
+            message=n.message,
+            is_read=n.is_read,
+            created_at=n.created_at,
+            notification_type=n.type
+        )
 
 class NotificationCreate(BaseModel):
     title: str
@@ -41,7 +55,7 @@ async def get_notifications(
         .limit(limit)
     )
     notifications = result.scalars().all()
-    return notifications
+    return [NotificationResponse.from_orm_model(n) for n in notifications]
 
 # The create_notification endpoint allows users to create new notifications with a specified title, message, and type. This endpoint is designed for admin or landlord users who want to send notifications to themselves or other users in the system. By providing a notification type, users can categorize their notifications, making it easier to manage and filter them later on. The endpoint validates the input data and saves the new notification to the database, ensuring that it is properly associated with the user who created it. This enhancement improves the functionality of the notification system and allows for better communication within the application.
 # The mark_as_read endpoint allows users to mark a specific notification as read. This is useful for managing notifications and keeping track of which ones have been acknowledged by the user. By marking a notification as read, users can easily distinguish between new and old notifications, helping them stay organized and focused on important updates. This endpoint ensures that only the owner of the notification can mark it as read, maintaining the integrity of the notification system and preventing unauthorized access to other users' notifications.
@@ -55,7 +69,7 @@ async def create_notification(
     """Create a notification (admin/landlord can broadcast)"""
     # If broadcast, create for all users (or tenants)
     if notification_in.broadcast:
-        result = await db.execute(select(User).where(User.role == 'tenant'))
+        result = await db.execute(select(User).where(User.role == UserRole.TENANT))
         tenants = result.scalars().all()
         for t in tenants:
             notif = Notification(
